@@ -58,9 +58,6 @@ el.replaceWith(d);
     @functools.wraps(func)
     def decorator(*args, **kwargs):
         logger = get_logger()
-        logger.debug(
-            f&#34;Function &#39;{func.__qualname__}&#39;: Passing **kwargs from config file.&#34;
-        )
 
         # Get function args
         sig = inspect.signature(func)
@@ -89,6 +86,12 @@ el.replaceWith(d);
                 _sanity_check(key, kwargs[key])
             # Append kwarg if not set - this assigns function args if they have the same name
             kwargs.setdefault(key, value)
+
+        logger.debug(
+            f&#34;Function &#39;{func.__qualname__}&#39;: Passing merged **kwargs &#34;
+            f&#34;(potential function call overrides applied to config defaults: {kwargs})&#34;
+            f&#34;{&#39; and *args from function call &#39; + str(args) if args else &#39;&#39;}.&#34;
+        )
         return func(*args, **kwargs)
 
     return decorator</code></pre>

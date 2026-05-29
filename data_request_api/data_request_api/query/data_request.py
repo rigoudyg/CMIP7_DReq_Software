@@ -140,7 +140,11 @@ class DRObjects(object):
         :return: a list of strings that can be assembled to print the content.
         """
         indent = "    " * level
-        return [f"{indent}{to_singular(self.DR_type)}: {self.name} (id: {is_link_id_or_value(self.id)[1]})", ]
+        linked_id = is_link_id_or_value(self.id)[1]
+        if self.name == linked_id:
+            return [f"{indent}{to_singular(self.DR_type)}: {self.name}", ]
+        else:
+            return [f"{indent}{to_singular(self.DR_type)}: {self.name} (id: {linked_id})", ]
 
     def filter_on_request(self, request_value, inner=True):
         """
@@ -259,7 +263,7 @@ class Variable(DRObjects):
             elif request_type in ["modelling_realms", ]:
                 found = request_value in self.modelling_realm
             elif request_type in ["esm-bcvs", ]:
-                found = request_value == self.__getattr__("esm-bcv")
+                found = request_value in self.__getattr__("esm-bcv")
             elif request_type in ["cf_standard_names", ]:
                 found = request_value == self.physical_parameter.cf_standard_name
             elif request_type in ["cell_methods", ]:
@@ -1088,7 +1092,7 @@ class DataRequest(object):
 
         def apply_operation_on_requests_links(dict_request_links, elements, operation, void_list="full"):
             logger = get_logger()
-            if len(rep) == 0:
+            if len(dict_request_links) == 0:
                 if void_list == "full":
                     rep_list = set(elements)
                 elif void_list == "void":

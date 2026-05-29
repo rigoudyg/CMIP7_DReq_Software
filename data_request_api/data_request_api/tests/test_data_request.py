@@ -21,8 +21,8 @@ from data_request_api.tests import filepath
 
 class TestDRObjects(unittest.TestCase):
     def setUp(self):
-        self.dr = DataRequest.from_separated_inputs(VS_input=filepath("one_base_VS_output.json"),
-                                                    DR_input=filepath("one_base_DR_output.json"))
+        self.dr = DataRequest.from_separated_inputs(VS_input=filepath("VS_release_not-consolidate_content.json"),
+                                                    DR_input=filepath("DR_release_not-consolidate_content.json"))
 
     def test_init(self):
         with self.assertRaises(TypeError):
@@ -52,7 +52,7 @@ class TestDRObjects(unittest.TestCase):
 
         obj = DRObjects.from_input(dr=self.dr, id="link::my_id", DR_type="priority_level")
 
-        obj = DRObjects.from_input(dr=self.dr, id="link::527f5c94-8c97-11ef-944e-41a8eb05f654", DR_type="priority_level")
+        obj = DRObjects.from_input(dr=self.dr, id="link::High", DR_type="priority_level")
 
     def test_check(self):
         obj = DRObjects("my_id", self.dr)
@@ -109,8 +109,8 @@ class TestDRObjects(unittest.TestCase):
 
 class TestExperimentsGroup(unittest.TestCase):
     def setUp(self):
-        self.dr = DataRequest.from_separated_inputs(VS_input=filepath("one_base_VS_output.json"),
-                                                    DR_input=filepath("one_base_DR_output.json"))
+        self.dr = DataRequest.from_separated_inputs(VS_input=filepath("VS_release_not-consolidate_content.json"),
+                                                    DR_input=filepath("DR_release_not-consolidate_content.json"))
 
     def test_init(self):
         with self.assertRaises(TypeError):
@@ -143,13 +143,13 @@ class TestExperimentsGroup(unittest.TestCase):
             obj = ExperimentsGroup.from_input(id="link::my_id", dr=self.dr, experiments=["link::test", ])
 
         obj = ExperimentsGroup.from_input(id="link::my_id", dr=self.dr,
-                                          experiments=["link::527f5c49-8c97-11ef-944e-41a8eb05f654", "link::527f5c3a-8c97-11ef-944e-41a8eb05f654"])
+                                          experiments=["link::amip", "link::esm-hist"])
 
     def test_check(self):
         obj = ExperimentsGroup(id="link::my_id", dr=self.dr)
         obj.check()
 
-        obj = ExperimentsGroup(id="link::my_id", dr=self.dr, experiments=["link::527f5c49-8c97-11ef-944e-41a8eb05f654", "link::527f5c3a-8c97-11ef-944e-41a8eb05f654"])
+        obj = ExperimentsGroup(id="link::my_id", dr=self.dr, experiments=["link::amip", "link::esm-hist"])
         obj.check()
 
     def test_methods(self):
@@ -158,22 +158,22 @@ class TestExperimentsGroup(unittest.TestCase):
         self.assertEqual(obj.get_experiments(), list())
 
         obj = ExperimentsGroup.from_input(id="link::80ab7324-a698-11ef-914a-613c0433d878", dr=self.dr,
-                                          experiments=["link::527f5c49-8c97-11ef-944e-41a8eb05f654", "link::527f5c3a-8c97-11ef-944e-41a8eb05f654"])
+                                          experiments=["link::amip", "link::esm-hist"])
         self.assertEqual(obj.count(), 2)
         self.assertListEqual(obj.get_experiments(),
-                             [self.dr.find_element("experiments", "link::527f5c49-8c97-11ef-944e-41a8eb05f654"),
-                              self.dr.find_element("experiments", "link::527f5c3a-8c97-11ef-944e-41a8eb05f654")])
+                             [self.dr.find_element("experiments", "link::amip"),
+                              self.dr.find_element("experiments", "link::esm-hist")])
         self.assertEqual(obj.get_experiments()[0].DR_type, "experiments")
 
     def test_print(self):
-        obj = ExperimentsGroup.from_input(id="link::dafc7490-8c95-11ef-944e-41a8eb05f654", dr=self.dr,
-                                          experiments=["link::527f5c3f-8c97-11ef-944e-41a8eb05f654", "link::527f5c3d-8c97-11ef-944e-41a8eb05f654"], name="historical")
-        ref_str = "experiment_group: historical (id: dafc7490-8c95-11ef-944e-41a8eb05f654)"
+        obj = ExperimentsGroup.from_input(id="link::historical", dr=self.dr,
+                                          experiments=["link::historical", "link::esm-hist"], name="historical")
+        ref_str = "experiment_group: historical"
         ref_str_2 = [
             ref_str,
             "    Experiments included:",
-            "        experiment: historical (id: 527f5c3f-8c97-11ef-944e-41a8eb05f654)",
-            "        experiment: esm-hist (id: 527f5c3d-8c97-11ef-944e-41a8eb05f654)"
+            "        experiment: historical",
+            "        experiment: esm-hist"
         ]
         self.assertEqual(obj.print_content(add_content=False), [ref_str, ])
         self.assertEqual(obj.print_content(level=1, add_content=False), ["    " + ref_str, ])
@@ -189,18 +189,18 @@ class TestExperimentsGroup(unittest.TestCase):
         obj3 = ExperimentsGroup(id="link::my_id_2", dr=self.dr)
         self.assertNotEqual(obj, obj3)
 
-        obj4 = ExperimentsGroup(id="link::my_id", dr=self.dr, experiments=["link::527f5c3a-8c97-11ef-944e-41a8eb05f654", "link::527f5c4c-8c97-11ef-944e-41a8eb05f654"])
+        obj4 = ExperimentsGroup(id="link::my_id", dr=self.dr, experiments=["link::amip", "link::esm-hist"])
         self.assertNotEqual(obj, obj4)
 
         obj5 = DRObjects(id="link::my_id", dr=self.dr)
         self.assertNotEqual(obj, obj5)
 
     def test_filter_on_request(self):
-        exp_grp1 = self.dr.find_element("experiment_groups", "link::80ab723e-a698-11ef-914a-613c0433d878")
+        exp_grp1 = self.dr.find_element("experiment_groups", "link::dcpp")
         exp_grp2 = copy.deepcopy(exp_grp1)
-        exp_grp3 = self.dr.find_element("experiment_groups", "link::dafc748d-8c95-11ef-944e-41a8eb05f654")
-        exp_1 = self.dr.find_element("experiments", "link::527f5c53-8c97-11ef-944e-41a8eb05f654")
-        exp_2 = self.dr.find_element("experiments", "link::527f5c3d-8c97-11ef-944e-41a8eb05f654")
+        exp_grp3 = self.dr.find_element("experiment_groups", "link::deck")
+        exp_1 = self.dr.find_element("experiments", "link::dcppB-forecast-cmip6")
+        exp_2 = self.dr.find_element("experiments", "link::esm-hist")
         obj = DRObjects(id="link::my_id", dr=self.dr)
         self.assertEqual(exp_grp1.filter_on_request(exp_grp2), (True, True))
         self.assertEqual(exp_grp1.filter_on_request(exp_grp3), (True, False))
@@ -211,12 +211,12 @@ class TestExperimentsGroup(unittest.TestCase):
 
 class TestVariables(unittest.TestCase):
     def setUp(self):
-        self.dr = DataRequest.from_separated_inputs(VS_input=filepath("one_base_VS_output.json"),
-                                                    DR_input=filepath("one_base_DR_output.json"))
+        self.dr = DataRequest.from_separated_inputs(VS_input=filepath("VS_release_not-consolidate_content.json"),
+                                                    DR_input=filepath("DR_release_not-consolidate_content.json"))
 
     def test_print(self):
-        obj = self.dr.find_element("variable", "1aab80fc-b006-11e6-9289-ac72891c3257")
-        ref_str = 'variable: wo at frequency mon (id: 1aab80fc-b006-11e6-9289-ac72891c3257, title: Sea Water Vertical Velocity)'
+        obj = self.dr.find_element("variable", "ocean.wo.tavg-ol-hxy-sea.mon.glb")
+        ref_str = 'variable: wo at frequency mon (id: ocean.wo.tavg-ol-hxy-sea.mon.glb, title: Sea Water Vertical Velocity)'
         ref_str_2 = [
             ref_str,
         ]
@@ -227,9 +227,9 @@ class TestVariables(unittest.TestCase):
         self.assertEqual(str(obj), os.linesep.join(ref_str_2))
 
     def test_filter_on_request(self):
-        var_1 = self.dr.find_element("variable", "1aab80fc-b006-11e6-9289-ac72891c3257")
+        var_1 = self.dr.find_element("variable", "ocean.wo.tavg-ol-hxy-sea.mon.glb")
         var_2 = copy.deepcopy(var_1)
-        var_3 = self.dr.find_element("variable", "5a070350-c77d-11e6-8a33-5404a60d96b5")
+        var_3 = self.dr.find_element("variable", "atmos.tas.tavg-h2m-hxy-u.day.glb")
         table_1 = self.dr.find_element("table_identifier", "527f5d06-8c97-11ef-944e-41a8eb05f654")
         table_2 = self.dr.find_element("table_identifier", "527f5d03-8c97-11ef-944e-41a8eb05f654")
         tshp_1 = self.dr.find_element("temporal_shape", "cf34c974-80be-11e6-97ee-ac72891c3257")
@@ -243,7 +243,7 @@ class TestVariables(unittest.TestCase):
         bcv_1 = self.dr.find_element("esm-bcv", "80ab7377-a698-11ef-914a-613c0433d878")
         bcv_2 = self.dr.find_element("esm-bcv", "80ab737f-a698-11ef-914a-613c0433d878")
         cf_1 = self.dr.find_element("cf_standard_name", "3ba9a909-8ca2-11ef-944e-41a8eb05f654")
-        cf_2 = self.dr.find_element("cf_standard_name", "3ba9a9ae-8ca2-11ef-944e-41a8eb05f654")
+        cf_2 = self.dr.find_element("cf_standard_name", "3ba9a9d3-8ca2-11ef-944e-41a8eb05f654")
         cell_method_1 = self.dr.find_element("cell_method", "a269a4cd-8c9b-11ef-944e-41a8eb05f654")
         cell_method_2 = self.dr.find_element("cell_method", "a269a4ce-8c9b-11ef-944e-41a8eb05f654")
         cell_measure_1 = self.dr.find_element("cell_measure", "a269a4f6-8c9b-11ef-944e-41a8eb05f654")
@@ -274,8 +274,8 @@ class TestVariables(unittest.TestCase):
 
 class TestVariablesGroup(unittest.TestCase):
     def setUp(self):
-        self.dr = DataRequest.from_separated_inputs(DR_input=filepath("one_base_DR_output.json"),
-                                                    VS_input=filepath("one_base_VS_output.json"))
+        self.dr = DataRequest.from_separated_inputs(DR_input=filepath("DR_release_not-consolidate_content.json"),
+                                                    VS_input=filepath("VS_release_not-consolidate_content.json"))
 
     def test_init(self):
         with self.assertRaises(TypeError):
@@ -309,16 +309,16 @@ class TestVariablesGroup(unittest.TestCase):
             obj = VariablesGroup.from_input(id="link:my_id", dr=self.dr, variables=["link::test", ])
 
         obj = VariablesGroup.from_input(id="link::my_id", dr=self.dr,
-                                        variables=["link::bab3cb52-e5dd-11e5-8482-ac72891c3257",
-                                                   "link::bab48ce0-e5dd-11e5-8482-ac72891c3257"])
+                                        variables=["link::atmos.pr.tavg-u-hxy-u.mon.glb",
+                                                   "link::atmos.prc.tavg-u-hxy-u.mon.glb"])
 
     def test_check(self):
         obj = VariablesGroup(id="link::my_id", dr=self.dr)
         obj.check()
 
         obj = VariablesGroup(id="link::my_id", dr=self.dr,
-                             variables=["link::bab3cb52-e5dd-11e5-8482-ac72891c3257",
-                                        "link::bab48ce0-e5dd-11e5-8482-ac72891c3257"])
+                             variables=["link::atmos.pr.tavg-u-hxy-u.mon.glb",
+                                        "link::atmos.prc.tavg-u-hxy-u.mon.glb"])
         obj.check()
 
     def test_methods(self):
@@ -329,30 +329,30 @@ class TestVariablesGroup(unittest.TestCase):
         self.assertEqual(obj.get_priority_level(), self.dr.find_element("priority_level", "High"))
 
         obj = VariablesGroup.from_input(id="link::dafc7484-8c95-11ef-944e-41a8eb05f654", dr=self.dr,
-                                        variables=["link::bab3cb52-e5dd-11e5-8482-ac72891c3257",
-                                                   "link::bab48ce0-e5dd-11e5-8482-ac72891c3257"],
-                                        mips=["link::527f5c7f-8c97-11ef-944e-41a8eb05f654", ], priority_level="High")
+                                        variables=["link::atmos.pr.tavg-u-hxy-u.mon.glb",
+                                                   "link::atmos.prc.tavg-u-hxy-u.mon.glb"],
+                                        mips=["link::C4MIP", ], priority_level="High")
         self.assertEqual(obj.count(), 2)
         self.assertListEqual(obj.get_variables(),
-                             [self.dr.find_element("variables", "link::bab3cb52-e5dd-11e5-8482-ac72891c3257"),
-                              self.dr.find_element("variables", "link::bab48ce0-e5dd-11e5-8482-ac72891c3257")])
-        self.assertEqual(obj.get_mips(), [self.dr.find_element("mips", "link::527f5c7f-8c97-11ef-944e-41a8eb05f654")])
+                             [self.dr.find_element("variables", "link::atmos.pr.tavg-u-hxy-u.mon.glb"),
+                              self.dr.find_element("variables", "link::atmos.prc.tavg-u-hxy-u.mon.glb")])
+        self.assertEqual(obj.get_mips(), [self.dr.find_element("mips", "link::C4MIP")])
         self.assertDictEqual(obj.get_priority_level().attributes,
                              {'name': "High", "notes": "The variables support the core objectives of the opportunity.  These are required to make the opportunity viable.", "value": 2,
-                              'id': "527f5c94-8c97-11ef-944e-41a8eb05f654", 'uid': '527f5c94-8c97-11ef-944e-41a8eb05f654'})
+                              'id': "High", 'uid': '527f5c94-8c97-11ef-944e-41a8eb05f654'})
 
     def test_filter_on_request(self):
-        var_grp1 = self.dr.find_element("variable_groups", "dafc743a-8c95-11ef-944e-41a8eb05f654")
+        var_grp1 = self.dr.find_element("variable_groups", "ocean_KE_vorticity_extremes")
         var_grp2 = copy.deepcopy(var_grp1)
-        var_grp3 = self.dr.find_element("variable_groups", "dafc7435-8c95-11ef-944e-41a8eb05f654")
-        var_2 = self.dr.find_element("variable", "baa71c7c-e5dd-11e5-8482-ac72891c3257")
-        var_1 = self.dr.find_element("variable", "83bbfc6e-7f07-11ef-9308-b1dd71e64bec")
-        mip_2 = self.dr.find_element("mips", "527f5c7d-8c97-11ef-944e-41a8eb05f654")
-        mip_1 = self.dr.find_element("mips", "527f5c6c-8c97-11ef-944e-41a8eb05f654")
-        prio_2 = self.dr.find_element("priority_level", "527f5c94-8c97-11ef-944e-41a8eb05f654")
-        prio_1 = self.dr.find_element("priority_level", "527f5c95-8c97-11ef-944e-41a8eb05f654")
-        max_prio_1 = self.dr.find_element("max_priority_level", "527f5c95-8c97-11ef-944e-41a8eb05f654")
-        max_prio_2 = self.dr.find_element("max_priority_level", "527f5c94-8c97-11ef-944e-41a8eb05f654")
+        var_grp3 = self.dr.find_element("variable_groups", "ocean_temperature_extremes")
+        var_2 = self.dr.find_element("variable", "ocean.tossq.tavg-u-hxy-sea.day.glb")
+        var_1 = self.dr.find_element("variable", "ocean.vos.tavg-u-hxy-sea.day.glb")
+        mip_2 = self.dr.find_element("mips", "CORDEX")
+        mip_1 = self.dr.find_element("mips", "TIPMIP")
+        prio_2 = self.dr.find_element("priority_level", "High")
+        prio_1 = self.dr.find_element("priority_level", "Medium")
+        max_prio_1 = self.dr.find_element("max_priority_level", "Medium")
+        max_prio_2 = self.dr.find_element("max_priority_level", "High")
         table_1 = self.dr.find_element("table_identifier", "527f5d03-8c97-11ef-944e-41a8eb05f654")
         table_2 = self.dr.find_element("table_identifier", "527f5d06-8c97-11ef-944e-41a8eb05f654")
         tshp_1 = self.dr.find_element("temporal_shape", "cf34c974-80be-11e6-97ee-ac72891c3257")
@@ -365,11 +365,11 @@ class TestVariablesGroup(unittest.TestCase):
         realm_2 = self.dr.find_element("modelling_realm", "atmos")
         bcv_2 = self.dr.find_element("esm-bcv", "link::80ab7303-a698-11ef-914a-613c0433d878")
         cf_std_1 = self.dr.find_element("cf_standard_name", "3ba8dccf-8ca2-11ef-944e-41a8eb05f654")
-        cf_std_2 = self.dr.find_element("cf_standard_name", "3ba9a9af-8ca2-11ef-944e-41a8eb05f654")
+        cf_std_2 = self.dr.find_element("cf_standard_name", "3ba81236-8ca2-11ef-944e-41a8eb05f654")
         cell_method_1 = self.dr.find_element("cell_methods", "a269a4cd-8c9b-11ef-944e-41a8eb05f654")
         cell_method_2 = self.dr.find_element("cell_methods", "a269a4e2-8c9b-11ef-944e-41a8eb05f654")
         cell_measure_1 = self.dr.find_element("cell_measure", "link::a269a4f5-8c9b-11ef-944e-41a8eb05f654")
-        cell_measure_2 = self.dr.find_element("cell_measure", "link::a269a4f8-8c9b-11ef-944e-41a8eb05f654")
+        cell_measure_2 = self.dr.find_element("cell_measure", "link::a269a4f4-8c9b-11ef-944e-41a8eb05f654")
         obj = DRObjects(id="link::my_id", dr=self.dr)
         self.assertEqual(var_grp1.filter_on_request(var_grp2), (True, True))
         self.assertEqual(var_grp1.filter_on_request(var_grp3), (True, False))
@@ -401,17 +401,17 @@ class TestVariablesGroup(unittest.TestCase):
         self.assertEqual(var_grp1.filter_on_request(obj), (False, False))
 
     def test_print(self):
-        obj = VariablesGroup.from_input(id="link::dafc73dd-8c95-11ef-944e-41a8eb05f654", dr=self.dr, priority_level="Medium",
+        obj = VariablesGroup.from_input(id="link::baseline_monthly", dr=self.dr, priority_level="Medium",
                                         name="baseline_monthly",
-                                        variables=["link::bab3cb52-e5dd-11e5-8482-ac72891c3257",
-                                                   "link::bab48ce0-e5dd-11e5-8482-ac72891c3257"])
-        ref_str = "variable_group: baseline_monthly (id: dafc73dd-8c95-11ef-944e-41a8eb05f654)"
+                                        variables=["link::atmos.pr.tavg-u-hxy-u.mon.glb",
+                                                   "link::atmos.prc.tavg-u-hxy-u.mon.glb"])
+        ref_str = "variable_group: baseline_monthly"
         ref_str_2 = [
             ref_str,
             "    Variables included:",
-            "        variable: pr at frequency mon (id: bab3cb52-e5dd-11e5-8482-ac72891c3257, title: Precipitation)",
-            "        variable: psl at frequency mon (id: bab48ce0-e5dd-11e5-8482-ac72891c3257, "
-            "title: Sea Level Pressure)"
+            "        variable: pr at frequency mon (id: atmos.pr.tavg-u-hxy-u.mon.glb, title: Precipitation)",
+            "        variable: prc at frequency mon (id: atmos.prc.tavg-u-hxy-u.mon.glb, "
+            "title: Convective Precipitation)"
         ]
         self.assertEqual(obj.print_content(add_content=False), [ref_str, ])
         self.assertEqual(obj.print_content(level=1, add_content=False), ["    " + ref_str, ])
@@ -427,11 +427,11 @@ class TestVariablesGroup(unittest.TestCase):
         obj3 = VariablesGroup(id="link::my_id_2", dr=self.dr)
         self.assertNotEqual(obj, obj3)
 
-        obj4 = VariablesGroup(id="link::my_id", dr=self.dr, variables=["link::bab3cb52-e5dd-11e5-8482-ac72891c3257",
-                                                                       "link::bab48ce0-e5dd-11e5-8482-ac72891c3257"])
+        obj4 = VariablesGroup(id="link::my_id", dr=self.dr, variables=["link::atmos.pr.tavg-u-hxy-u.mon.glb",
+                                                                       "link::atmos.prc.tavg-u-hxy-u.mon.glb"])
         self.assertNotEqual(obj, obj4)
 
-        obj5 = VariablesGroup(id="link::my_id", dr=self.dr, mips=["link::527f5c7f-8c97-11ef-944e-41a8eb05f654", ])
+        obj5 = VariablesGroup(id="link::my_id", dr=self.dr, mips=["link::C4MIP", ])
         self.assertNotEqual(obj, obj5)
 
         obj6 = VariablesGroup(id="link::my_id", dr=self.dr, priority="Medium")
@@ -443,8 +443,8 @@ class TestVariablesGroup(unittest.TestCase):
 
 class TestOpportunity(unittest.TestCase):
     def setUp(self):
-        self.dr = DataRequest.from_separated_inputs(DR_input=filepath("one_base_DR_output.json"),
-                                                    VS_input=filepath("one_base_VS_output.json"))
+        self.dr = DataRequest.from_separated_inputs(DR_input=filepath("DR_release_not-consolidate_content.json"),
+                                                    VS_input=filepath("VS_release_not-consolidate_content.json"))
 
     def test_init(self):
         with self.assertRaises(TypeError):
@@ -480,10 +480,10 @@ class TestOpportunity(unittest.TestCase):
             obj = Opportunity.from_input(id="my_id", dr=self.dr, variable_groups=["test", ])
 
         obj = Opportunity.from_input(id="my_id", dr=self.dr,
-                                     variable_groups=["link::dafc747f-8c95-11ef-944e-41a8eb05f654", "link::dafc7428-8c95-11ef-944e-41a8eb05f654"],
-                                     experiment_groups=["link::dafc748e-8c95-11ef-944e-41a8eb05f654", ],
-                                     data_request_themes=["link::527f5c90-8c97-11ef-944e-41a8eb05f654", "link::527f5c93-8c97-11ef-944e-41a8eb05f654",
-                                                          "link::527f5c8f-8c97-11ef-944e-41a8eb05f654"])
+                                     variable_groups=["link::surgemip_variables", "link::landatm_coupling_3hA"],
+                                     experiment_groups=["link::fast-track", ],
+                                     data_request_themes=["link::atmosphere", "link::earth_system",
+                                                          "link::impacts"])
 
     def test_check(self):
         obj = Opportunity(id="my_id", dr=self.dr)
@@ -499,38 +499,38 @@ class TestOpportunity(unittest.TestCase):
         self.assertEqual(obj.get_themes(), list())
 
         obj = Opportunity.from_input(id="link::default_425", dr=self.dr,
-                                     variable_groups=["link::dafc747f-8c95-11ef-944e-41a8eb05f654", "link::dafc7428-8c95-11ef-944e-41a8eb05f654"],
-                                     experiment_groups=["link::dafc748e-8c95-11ef-944e-41a8eb05f654", ],
-                                     data_request_themes=["link::527f5c93-8c97-11ef-944e-41a8eb05f654", "link::527f5c8f-8c97-11ef-944e-41a8eb05f654",
-                                                          "link::527f5c92-8c97-11ef-944e-41a8eb05f654"])
-        self.assertListEqual(obj.get_experiment_groups(), [self.dr.find_element("experiment_groups", "dafc748e-8c95-11ef-944e-41a8eb05f654")])
+                                     variable_groups=["link::surgemip_variables", "link::landatm_coupling_3hA"],
+                                     experiment_groups=["link::fast-track", ],
+                                     data_request_themes=["link::earth_system", "link::impacts",
+                                                          "link::ocean_seaice"])
+        self.assertListEqual(obj.get_experiment_groups(), [self.dr.find_element("experiment_groups", "fast-track")])
         self.assertListEqual(obj.get_variable_groups(),
-                             [self.dr.find_element("variable_groups", "link::dafc747f-8c95-11ef-944e-41a8eb05f654"),
-                              self.dr.find_element("variable_groups", "link::dafc7428-8c95-11ef-944e-41a8eb05f654")])
+                             [self.dr.find_element("variable_groups", "link::surgemip_variables"),
+                              self.dr.find_element("variable_groups", "link::landatm_coupling_3hA")])
         self.assertListEqual(obj.get_themes(),
-                             [self.dr.find_element("data_request_themes", "link::527f5c93-8c97-11ef-944e-41a8eb05f654"),
-                              self.dr.find_element("data_request_themes", "link::527f5c8f-8c97-11ef-944e-41a8eb05f654"),
-                              self.dr.find_element("data_request_themes", "link::527f5c92-8c97-11ef-944e-41a8eb05f654")
+                             [self.dr.find_element("data_request_themes", "link::earth_system"),
+                              self.dr.find_element("data_request_themes", "link::impacts"),
+                              self.dr.find_element("data_request_themes", "link::ocean_seaice")
                               ])
 
     def test_print(self):
-        obj = Opportunity.from_input(id="link::dafc73a5-8c95-11ef-944e-41a8eb05f654", dr=self.dr, name="Ocean Extremes",
-                                     variable_groups=["link::dafc73dd-8c95-11ef-944e-41a8eb05f654", "link::dafc73de-8c95-11ef-944e-41a8eb05f654"],
-                                     experiment_groups=["link::dafc748e-8c95-11ef-944e-41a8eb05f654", ],
-                                     data_request_themes=["link::527f5c90-8c97-11ef-944e-41a8eb05f654", "link::527f5c8f-8c97-11ef-944e-41a8eb05f654",
-                                                          "link::527f5c91-8c97-11ef-944e-41a8eb05f654"])
-        ref_str = "opportunity: Ocean Extremes (id: dafc73a5-8c95-11ef-944e-41a8eb05f654)"
+        obj = Opportunity.from_input(id="link::Ocean Extremes", dr=self.dr, name="Ocean Extremes",
+                                     variable_groups=["link::baseline_monthly", "link::baseline_subdaily"],
+                                     experiment_groups=["link::fast-track", ],
+                                     data_request_themes=["link::atmosphere", "link::impacts",
+                                                          "link::land_landice"])
+        ref_str = "opportunity: Ocean Extremes"
         ref_str_2 = [
             ref_str,
             "    Experiments groups included:",
-            "        experiment_group: fast-track (id: dafc748e-8c95-11ef-944e-41a8eb05f654)",
+            "        experiment_group: fast-track",
             "    Variables groups included:",
-            "        variable_group: baseline_monthly (id: dafc73dd-8c95-11ef-944e-41a8eb05f654)",
-            "        variable_group: baseline_subdaily (id: dafc73de-8c95-11ef-944e-41a8eb05f654)",
+            "        variable_group: baseline_monthly",
+            "        variable_group: baseline_subdaily",
             "    Themes included:",
-            "        data_request_theme: Atmosphere (id: 527f5c90-8c97-11ef-944e-41a8eb05f654)",
-            "        data_request_theme: Impacts & Adaptation (id: 527f5c8f-8c97-11ef-944e-41a8eb05f654)",
-            "        data_request_theme: Land & Land-Ice (id: 527f5c91-8c97-11ef-944e-41a8eb05f654)",
+            "        data_request_theme: Atmosphere (id: atmosphere)",
+            "        data_request_theme: Impacts & Adaptation (id: impacts)",
+            "        data_request_theme: Land & Land-Ice (id: land_landice)",
             "    Time subsets included:"
         ]
         self.assertEqual(obj.print_content(add_content=False), [ref_str, ])
@@ -547,7 +547,7 @@ class TestOpportunity(unittest.TestCase):
         obj3 = Opportunity(id="my_id_2", dr=self.dr)
         self.assertNotEqual(obj, obj3)
 
-        obj4 = Opportunity(id="my_id", dr=self.dr, experiments_groups=["dafc748e-8c95-11ef-944e-41a8eb05f654", ])
+        obj4 = Opportunity(id="my_id", dr=self.dr, experiments_groups=["fast-track", ])
         self.assertNotEqual(obj, obj4)
 
         obj5 = Opportunity(id="my_id", dr=self.dr, variables_groups=["default_733", "default_734"])
@@ -560,94 +560,93 @@ class TestOpportunity(unittest.TestCase):
         self.assertNotEqual(obj, obj7)
 
     def test_filter_on_request(self):
-        op_1 = self.dr.find_element("opportunities", "dafc73a5-8c95-11ef-944e-41a8eb05f654")
+        op_1 = self.dr.find_element("opportunities", "Accurate assessment of land-atmosphere coupling")
         op_2 = copy.deepcopy(op_1)
-        op_3 = self.dr.find_element("opportunities", "dafc73bd-8c95-11ef-944e-41a8eb05f654")
-        theme_1 = self.dr.find_element("data_request_theme", "527f5c90-8c97-11ef-944e-41a8eb05f654")
-        theme_2 = self.dr.find_element("data_request_theme", "527f5c92-8c97-11ef-944e-41a8eb05f654")
-        var_grp_1 = self.dr.find_element("variable_group", "dafc747f-8c95-11ef-944e-41a8eb05f654")
-        var_grp_2 = self.dr.find_element("variable_group", "dafc7428-8c95-11ef-944e-41a8eb05f654")
-        exp_grp_1 = self.dr.find_element("experiment_group", "dafc7490-8c95-11ef-944e-41a8eb05f654")
-        exp_grp_2 = self.dr.find_element("experiment_group", "dafc748e-8c95-11ef-944e-41a8eb05f654")
-        exp_1 = self.dr.find_element("experiment", "527f5c3d-8c97-11ef-944e-41a8eb05f654")
-        exp_2 = self.dr.find_element("experiment", "527f5c40-8c97-11ef-944e-41a8eb05f654")
-        time_1 = self.dr.find_element("time_subset", "link::527f5cac-8c97-11ef-944e-41a8eb05f654")
-        var_2 = self.dr.find_element("variable", "5a070350-c77d-11e6-8a33-5404a60d96b5")
-        var_1 = self.dr.find_element("variable", "83bbfc6e-7f07-11ef-9308-b1dd71e64bec")
-        mip_2 = self.dr.find_element("mips", "527f5c77-8c97-11ef-944e-41a8eb05f654")
-        mip_1 = self.dr.find_element("mips", "527f5c6c-8c97-11ef-944e-41a8eb05f654")
-        prio_2 = self.dr.find_element("priority_level", "527f5c94-8c97-11ef-944e-41a8eb05f654")
-        prio_1 = self.dr.find_element("priority_level", "527f5c95-8c97-11ef-944e-41a8eb05f654")
-        max_prio_1 = self.dr.find_element("max_priority_level", "527f5c95-8c97-11ef-944e-41a8eb05f654")
-        max_prio_2 = self.dr.find_element("max_priority_level", "527f5c94-8c97-11ef-944e-41a8eb05f654")
+        op_3 = self.dr.find_element("opportunities", "Ocean Extremes")
+        theme_1 = self.dr.find_element("data_request_theme", "atmosphere")
+        theme_2 = self.dr.find_element("data_request_theme", "ocean_seaice")
+        var_grp_1 = self.dr.find_element("variable_group", "surgemip_variables")
+        var_grp_2 = self.dr.find_element("variable_group", "landatm_coupling_3hA")
+        exp_grp_1 = self.dr.find_element("experiment_group", "historical")
+        exp_grp_2 = self.dr.find_element("experiment_group", "fast-track")
+        exp_1 = self.dr.find_element("experiment", "esm-hist")
+        exp_2 = self.dr.find_element("experiment", "piClim-NOX")
+        time_1 = self.dr.find_element("time_subset", "link::hist20")
+        var_2 = self.dr.find_element("variable", "atmos.tas.tavg-h2m-hxy-u.day.glb")
+        var_1 = self.dr.find_element("variable", "ocean.vos.tavg-u-hxy-sea.day.glb")
+        mip_2 = self.dr.find_element("mips", "LUMIP")
+        mip_1 = self.dr.find_element("mips", "TIPMIP")
+        prio_2 = self.dr.find_element("priority_level", "High")
+        prio_1 = self.dr.find_element("priority_level", "Medium")
+        max_prio_1 = self.dr.find_element("max_priority_level", "Medium")
+        max_prio_2 = self.dr.find_element("max_priority_level", "High")
         table_1 = self.dr.find_element("table_identifier", "527f5d03-8c97-11ef-944e-41a8eb05f654")
         table_2 = self.dr.find_element("table_identifier", "527f5ce9-8c97-11ef-944e-41a8eb05f654")
         tshp_1 = self.dr.find_element("temporal_shape", "cf34c974-80be-11e6-97ee-ac72891c3257")
         tshp_2 = self.dr.find_element("temporal_shape", "a06034e5-bbca-11ef-9840-9de7167a7ecb")
         sshp_1 = self.dr.find_element("spatial_shape", "a656047a-8883-11e5-b571-ac72891c3257")
         sshp_2 = self.dr.find_element("spatial_shape", "a65615fa-8883-11e5-b571-ac72891c3257")
-        param_1 = self.dr.find_element("physical_parameter", "3e3ddc77800e7d421834b9cb808602d7")
+        param_1 = self.dr.find_element("physical_parameter", "0e5d376315a376cd2b1e37f440fe43d3")
         param_2 = self.dr.find_element("physical_parameter", "00e77372e8b909d9a827a0790e991fd9")
         realm_1 = self.dr.find_element("modelling_realm", "ocean")
         realm_2 = self.dr.find_element("modelling_realm", "land")
         bcv_2 = self.dr.find_element("esm-bcv", "link::80ab7303-a698-11ef-914a-613c0433d878")
-        cf_std_1 = self.dr.find_element("cf_standard_name", "3ba8131b-8ca2-11ef-944e-41a8eb05f654")
-        cf_std_2 = self.dr.find_element("cf_standard_name", "3ba9a9af-8ca2-11ef-944e-41a8eb05f654")
+        cf_std_1 = self.dr.find_element("cf_standard_name", "3ba812a0-8ca2-11ef-944e-41a8eb05f654")
+        cf_std_2 = self.dr.find_element("cf_standard_name", "3ba8dadd-8ca2-11ef-944e-41a8eb05f654")
         cell_method_1 = self.dr.find_element("cell_methods", "a269a4cd-8c9b-11ef-944e-41a8eb05f654")
         cell_method_2 = self.dr.find_element("cell_methods", "a269a4c3-8c9b-11ef-944e-41a8eb05f654")
         cell_measure_1 = self.dr.find_element("cell_measure", "link::a269a4f5-8c9b-11ef-944e-41a8eb05f654")
-        cell_measure_2 = self.dr.find_element("cell_measure", "link::a269a4f8-8c9b-11ef-944e-41a8eb05f654")
         obj = DRObjects(id="link::my_id", dr=self.dr)
         self.assertEqual(op_1.filter_on_request(op_2), (True, True))
         self.assertEqual(op_1.filter_on_request(op_3), (True, False))
-        self.assertEqual(op_3.filter_on_request(theme_1), (True, True))
-        self.assertEqual(op_3.filter_on_request(theme_2), (True, False))
-        self.assertEqual(op_3.filter_on_request(exp_1), (True, True))
-        self.assertEqual(op_3.filter_on_request(exp_2), (True, False))
-        self.assertEqual(op_3.filter_on_request(time_1), (True, True))
-        self.assertEqual(op_1.filter_on_request(time_1), (True, False))
-        self.assertEqual(op_3.filter_on_request(exp_grp_1), (True, True))
-        self.assertEqual(op_3.filter_on_request(exp_grp_2), (True, False))
-        self.assertEqual(op_1.filter_on_request(var_grp_1), (True, True))
-        self.assertEqual(op_1.filter_on_request(var_grp_2), (True, False))
-        self.assertEqual(op_1.filter_on_request(var_1), (True, True))
-        self.assertEqual(op_1.filter_on_request(var_2), (True, False))
-        self.assertEqual(op_1.filter_on_request(mip_1), (True, True))
-        self.assertEqual(op_1.filter_on_request(mip_2), (True, False))
-        self.assertEqual(op_1.filter_on_request(prio_1), (True, True))
-        self.assertEqual(op_1.filter_on_request(prio_2), (True, True))
-        self.assertEqual(op_1.filter_on_request(max_prio_1), (True, True))
-        self.assertEqual(op_1.filter_on_request(max_prio_2), (True, True))
-        self.assertEqual(op_1.filter_on_request(table_1), (True, True))
-        self.assertEqual(op_1.filter_on_request(table_2), (True, False))
-        self.assertEqual(op_1.filter_on_request(tshp_1), (True, True))
-        self.assertEqual(op_1.filter_on_request(tshp_2), (True, False))
-        self.assertEqual(op_1.filter_on_request(sshp_1), (True, True))
-        self.assertEqual(op_1.filter_on_request(sshp_2), (True, False))
-        self.assertEqual(op_1.filter_on_request(param_1), (True, True))
-        self.assertEqual(op_1.filter_on_request(param_2), (True, False))
-        self.assertEqual(op_1.filter_on_request(realm_1), (True, True))
-        self.assertEqual(op_1.filter_on_request(realm_2), (True, False))
-        self.assertEqual(op_1.filter_on_request(bcv_2), (True, False))
-        self.assertEqual(op_1.filter_on_request(cf_std_1), (True, True))
-        self.assertEqual(op_1.filter_on_request(cf_std_2), (True, False))
-        self.assertEqual(op_1.filter_on_request(cell_method_1), (True, True))
-        self.assertEqual(op_1.filter_on_request(cell_method_2), (True, False))
-        self.assertEqual(op_1.filter_on_request(cell_measure_1), (True, True))
-        self.assertEqual(op_1.filter_on_request(cell_measure_2), (True, False))
-        self.assertEqual(op_1.filter_on_request(obj), (False, False))
+        self.assertEqual(op_1.filter_on_request(theme_1), (True, True))
+        self.assertEqual(op_1.filter_on_request(theme_2), (True, False))
+        self.assertEqual(op_1.filter_on_request(exp_1), (True, True))
+        self.assertEqual(op_1.filter_on_request(exp_2), (True, False))
+        self.assertEqual(op_1.filter_on_request(time_1), (True, True))
+        self.assertEqual(op_3.filter_on_request(time_1), (True, False))
+        self.assertEqual(op_1.filter_on_request(exp_grp_1), (True, True))
+        self.assertEqual(op_1.filter_on_request(exp_grp_2), (True, False))
+        self.assertEqual(op_1.filter_on_request(var_grp_2), (True, True))
+        self.assertEqual(op_1.filter_on_request(var_grp_1), (True, False))
+        self.assertEqual(op_3.filter_on_request(var_1), (True, True))
+        self.assertEqual(op_3.filter_on_request(var_2), (True, False))
+        self.assertEqual(op_3.filter_on_request(mip_1), (True, True))
+        self.assertEqual(op_3.filter_on_request(mip_2), (True, False))
+        self.assertEqual(op_3.filter_on_request(prio_1), (True, True))
+        self.assertEqual(op_3.filter_on_request(prio_2), (True, True))
+        self.assertEqual(op_3.filter_on_request(max_prio_1), (True, True))
+        self.assertEqual(op_3.filter_on_request(max_prio_2), (True, True))
+        self.assertEqual(op_3.filter_on_request(table_1), (True, True))
+        self.assertEqual(op_3.filter_on_request(table_2), (True, False))
+        self.assertEqual(op_3.filter_on_request(tshp_1), (True, True))
+        self.assertEqual(op_3.filter_on_request(tshp_2), (True, False))
+        self.assertEqual(op_3.filter_on_request(sshp_1), (True, True))
+        self.assertEqual(op_3.filter_on_request(sshp_2), (True, False))
+        self.assertEqual(op_3.filter_on_request(param_1), (True, True))
+        self.assertEqual(op_3.filter_on_request(param_2), (True, False))
+        self.assertEqual(op_3.filter_on_request(realm_1), (True, True))
+        self.assertEqual(op_3.filter_on_request(realm_2), (True, False))
+        self.assertEqual(op_3.filter_on_request(bcv_2), (True, False))
+        self.assertEqual(op_3.filter_on_request(cf_std_1), (True, True))
+        self.assertEqual(op_3.filter_on_request(cf_std_2), (True, False))
+        self.assertEqual(op_3.filter_on_request(cell_method_1), (True, True))
+        self.assertEqual(op_3.filter_on_request(cell_method_2), (True, False))
+        self.assertEqual(op_3.filter_on_request(cell_measure_1), (True, True))
+        self.assertEqual(op_1.filter_on_request(cell_measure_1), (True, False))
+        self.assertEqual(op_3.filter_on_request(obj), (False, False))
 
 
 class TestDataRequest(unittest.TestCase):
     def setUp(self):
-        self.vs_file = filepath("one_base_VS_output.json")
+        self.vs_file = filepath("VS_release_not-consolidate_content.json")
         self.vs_dict = read_json_input_file_content(self.vs_file)
         self.vs = VocabularyServer.from_input(self.vs_file)
-        self.input_database_file = filepath("one_base_DR_output.json")
+        self.input_database_file = filepath("DR_release_not-consolidate_content.json")
         self.input_database = read_json_input_file_content(self.input_database_file)
-        self.complete_input_file = filepath("one_base_input.json")
+        self.complete_input_file = filepath("dreq_release_export.json")
         self.complete_input = read_json_input_file_content(self.complete_input_file)
-        self.DR_dump = filepath("one_base_DR_dump.txt")
+        self.DR_dump = filepath("DR_release_not-consolidate_content_dump.txt")
 
     def test_init(self):
         with self.assertRaises(TypeError):
@@ -660,7 +659,7 @@ class TestDataRequest(unittest.TestCase):
             DataRequest(self.input_database)
 
         obj = DataRequest(input_database=self.input_database, VS=self.vs)
-        self.assertEqual(len(obj.get_experiment_groups()), 7)
+        self.assertEqual(len(obj.get_experiment_groups()), 6)
         self.assertEqual(len(obj.get_variable_groups()), 13)
         self.assertEqual(len(obj.get_opportunities()), 4)
 
@@ -681,12 +680,12 @@ class TestDataRequest(unittest.TestCase):
             DataRequest.from_input(self.complete_input_file + "tmp", version="test")
 
         obj = DataRequest.from_input(json_input=self.complete_input, version="test")
-        self.assertEqual(len(obj.get_experiment_groups()), 7)
+        self.assertEqual(len(obj.get_experiment_groups()), 6)
         self.assertEqual(len(obj.get_variable_groups()), 13)
         self.assertEqual(len(obj.get_opportunities()), 4)
 
         obj = DataRequest.from_input(json_input=self.complete_input_file, version="test")
-        self.assertEqual(len(obj.get_experiment_groups()), 7)
+        self.assertEqual(len(obj.get_experiment_groups()), 6)
         self.assertEqual(len(obj.get_variable_groups()), 13)
         self.assertEqual(len(obj.get_opportunities()), 4)
 
@@ -710,22 +709,22 @@ class TestDataRequest(unittest.TestCase):
             DataRequest.from_separated_inputs(DR_input=self.input_database_file, VS_input=self.vs)
 
         obj = DataRequest.from_separated_inputs(DR_input=self.input_database, VS_input=self.vs_dict)
-        self.assertEqual(len(obj.get_experiment_groups()), 7)
+        self.assertEqual(len(obj.get_experiment_groups()), 6)
         self.assertEqual(len(obj.get_variable_groups()), 13)
         self.assertEqual(len(obj.get_opportunities()), 4)
 
         obj = DataRequest.from_separated_inputs(DR_input=self.input_database_file, VS_input=self.vs_dict)
-        self.assertEqual(len(obj.get_experiment_groups()), 7)
+        self.assertEqual(len(obj.get_experiment_groups()), 6)
         self.assertEqual(len(obj.get_variable_groups()), 13)
         self.assertEqual(len(obj.get_opportunities()), 4)
 
         obj = DataRequest.from_separated_inputs(DR_input=self.input_database, VS_input=self.vs_file)
-        self.assertEqual(len(obj.get_experiment_groups()), 7)
+        self.assertEqual(len(obj.get_experiment_groups()), 6)
         self.assertEqual(len(obj.get_variable_groups()), 13)
         self.assertEqual(len(obj.get_opportunities()), 4)
 
         obj = DataRequest.from_separated_inputs(DR_input=self.input_database_file, VS_input=self.vs_file)
-        self.assertEqual(len(obj.get_experiment_groups()), 7)
+        self.assertEqual(len(obj.get_experiment_groups()), 6)
         self.assertEqual(len(obj.get_variable_groups()), 13)
         self.assertEqual(len(obj.get_opportunities()), 4)
 
@@ -772,19 +771,17 @@ class TestDataRequest(unittest.TestCase):
     def test_get_experiment_groups(self):
         obj = DataRequest(input_database=self.input_database, VS=self.vs)
         exp_groups = obj.get_experiment_groups()
-        self.assertEqual(len(exp_groups), 7)
+        self.assertEqual(len(exp_groups), 6)
         self.assertListEqual(exp_groups,
                              [obj.find_element("experiment_groups", id)
-                              for id in ["80ab723e-a698-11ef-914a-613c0433d878", "80ab72c9-a698-11ef-914a-613c0433d878",
-                                         "80ac3142-a698-11ef-914a-613c0433d878", "dafc748d-8c95-11ef-944e-41a8eb05f654",
-                                         "dafc748e-8c95-11ef-944e-41a8eb05f654", "dafc748f-8c95-11ef-944e-41a8eb05f654",
-                                         "dafc7490-8c95-11ef-944e-41a8eb05f654"]])
+                              for id in ["dcpp", "deck", "fast-track", "historical",
+                                         "scenarios", "scenarios_extensions"]])
 
     def test_get_experiment_group(self):
         obj = DataRequest(input_database=self.input_database, VS=self.vs)
-        exp_grp = obj.get_experiment_group("link::dafc748e-8c95-11ef-944e-41a8eb05f654")
+        exp_grp = obj.get_experiment_group("link::fast-track")
         self.assertEqual(exp_grp,
-                         obj.find_element("experiment_groups", "link::dafc748e-8c95-11ef-944e-41a8eb05f654"))
+                         obj.find_element("experiment_groups", "link::fast-track"))
         with self.assertRaises(ValueError):
             exp_grp = obj.get_experiment_group("test")
 
@@ -793,14 +790,13 @@ class TestDataRequest(unittest.TestCase):
         opportunities = obj.get_opportunities()
         self.assertEqual(len(opportunities), 4)
         self.assertListEqual(opportunities, [obj.find_element("opportunities", id)
-                                             for id in ["dafc739e-8c95-11ef-944e-41a8eb05f654", "dafc739f-8c95-11ef-944e-41a8eb05f654",
-                                                        "dafc73a5-8c95-11ef-944e-41a8eb05f654", "dafc73bd-8c95-11ef-944e-41a8eb05f654"]])
+                                             for id in ["1", "49", "68", "69"]])
 
     def test_get_opportunity(self):
         obj = DataRequest(input_database=self.input_database, VS=self.vs)
-        opportunity = obj.get_opportunity("link::dafc73bd-8c95-11ef-944e-41a8eb05f654")
+        opportunity = obj.get_opportunity("link::Accurate assessment of land-atmosphere coupling")
         self.assertEqual(opportunity,
-                         obj.find_element("opportunities", "link::dafc73bd-8c95-11ef-944e-41a8eb05f654"))
+                         obj.find_element("opportunities", "link::Accurate assessment of land-atmosphere coupling"))
         with self.assertRaises(ValueError):
             op = obj.get_opportunity("test")
 
@@ -810,19 +806,17 @@ class TestDataRequest(unittest.TestCase):
         self.assertEqual(len(var_groups), 13)
         self.assertListEqual(var_groups,
                              [obj.find_element("variable_groups", id)
-                              for id in ["80ab723b-a698-11ef-914a-613c0433d878", "80ab73e2-a698-11ef-914a-613c0433d878",
-                                         "80ab73e4-a698-11ef-914a-613c0433d878", "dafc73da-8c95-11ef-944e-41a8eb05f654",
-                                         "dafc73dc-8c95-11ef-944e-41a8eb05f654", "dafc73dd-8c95-11ef-944e-41a8eb05f654",
-                                         "dafc73de-8c95-11ef-944e-41a8eb05f654", "dafc7428-8c95-11ef-944e-41a8eb05f654",
-                                         "dafc7435-8c95-11ef-944e-41a8eb05f654", "dafc7436-8c95-11ef-944e-41a8eb05f654",
-                                         "dafc743a-8c95-11ef-944e-41a8eb05f654", "dafc7464-8c95-11ef-944e-41a8eb05f654",
-                                         "dafc747f-8c95-11ef-944e-41a8eb05f654"]])
+                              for id in ["baseline_daily", "baseline_fixed", "baseline_monthly", "baseline_subdaily",
+                                         "landatm_coupling_3hA", "landatm_coupling_3hr_medium", "mixed_layer_extremes",
+                                         "ocean_KE_vorticity_extremes", "ocean_acidification_oxygen_extremes",
+                                         "ocean_temperature_extremes", "sea_level_extremes", "sfc_waves",
+                                         "surgemip_variables"]])
 
     def test_get_variable_group(self):
         obj = DataRequest(input_database=self.input_database, VS=self.vs)
-        var_grp = obj.get_variable_group("link::dafc73dd-8c95-11ef-944e-41a8eb05f654")
+        var_grp = obj.get_variable_group("link::baseline_monthly")
         self.assertEqual(var_grp,
-                         obj.find_element("variable_groups", "link::dafc73dd-8c95-11ef-944e-41a8eb05f654"))
+                         obj.find_element("variable_groups", "link::baseline_monthly"))
         with self.assertRaises(ValueError):
             var_grp = obj.get_variable_group("test")
 
@@ -876,9 +870,9 @@ class TestDataRequest(unittest.TestCase):
 
 class TestDataRequestFilter(unittest.TestCase):
     def setUp(self):
-        self.vs_file = filepath("one_base_VS_output.json")
+        self.vs_file = filepath("VS_release_not-consolidate_content.json")
         self.vs = VocabularyServer.from_input(self.vs_file)
-        self.input_database_file = filepath("one_base_DR_output.json")
+        self.input_database_file = filepath("DR_release_not-consolidate_content.json")
         self.input_database = read_json_input_file_content(self.input_database_file)
         self.dr = DataRequest(input_database=self.input_database, VS=self.vs)
         self.exp_export = filepath("experiments_export.txt")
@@ -886,8 +880,8 @@ class TestDataRequestFilter(unittest.TestCase):
         self.maxDiff = None
 
     def test_element_per_identifier_from_vs(self):
-        id_var = "link::1aab80fc-b006-11e6-9289-ac72891c3257"
-        name_var = "ocean.wo.tavg-ol-hxy-sea.mon.GLB"
+        id_var = "link::ocean.wo.tavg-ol-hxy-sea.mon.glb"
+        name_var = "ocean.wo.tavg-ol-hxy-sea.mon.glb"
         target_var = self.dr.find_element("variables", id_var)
         self.assertEqual(self.dr.find_element_per_identifier_from_vs(element_type="variables", key="id", value=id_var),
                          target_var)
@@ -912,8 +906,8 @@ class TestDataRequestFilter(unittest.TestCase):
                          None)
 
     def test_element_from_vs(self):
-        id_var = "link::1aab80fc-b006-11e6-9289-ac72891c3257"
-        name_var = "ocean.wo.tavg-ol-hxy-sea.mon.GLB"
+        id_var = "link::ocean.wo.tavg-ol-hxy-sea.mon.glb"
+        name_var = "ocean.wo.tavg-ol-hxy-sea.mon.glb"
         target_var = self.dr.find_element("variables", id_var)
         self.assertEqual(self.dr.find_element_from_vs(element_type="variables", value=id_var), target_var)
         self.assertEqual(self.dr.find_element_from_vs(element_type="variables", value=name_var), target_var)
@@ -944,107 +938,111 @@ class TestDataRequestFilter(unittest.TestCase):
                              self.dr.get_opportunities())
 
         self.assertListEqual(self.dr.filter_elements_per_request("experiment_groups",
-                                                                 requests=dict(variable="1aab80fc-b006-11e6-9289-ac72891c3257")),
+                                                                 requests=dict(variable="ocean.wo.tavg-ol-hxy-sea.mon.glb")),
                              [self.dr.find_element("experiment_group", id)
-                              for id in ["link::80ab72c9-a698-11ef-914a-613c0433d878", "link::80ac3142-a698-11ef-914a-613c0433d878",
-                                         "link::dafc748d-8c95-11ef-944e-41a8eb05f654", "link::dafc748e-8c95-11ef-944e-41a8eb05f654",
-                                         "link::dafc748f-8c95-11ef-944e-41a8eb05f654", "link::dafc7490-8c95-11ef-944e-41a8eb05f654"]])
+                              for id in ["link::deck", "link::fast-track", "link::historical", "link::scenarios",
+                                         "link::scenarios_extensions"]])
         list_var_grp = [self.dr.find_element("variable_groups", id)
-                        for id in ["link::80ab73e2-a698-11ef-914a-613c0433d878", "link::80ab73e4-a698-11ef-914a-613c0433d878",
-                                   "link::dafc73da-8c95-11ef-944e-41a8eb05f654", "link::dafc73dc-8c95-11ef-944e-41a8eb05f654",
-                                   "link::dafc73dd-8c95-11ef-944e-41a8eb05f654", "link::dafc73de-8c95-11ef-944e-41a8eb05f654",
-                                   "link::dafc7435-8c95-11ef-944e-41a8eb05f654", "link::dafc7436-8c95-11ef-944e-41a8eb05f654",
-                                   "link::dafc743a-8c95-11ef-944e-41a8eb05f654", "link::dafc7464-8c95-11ef-944e-41a8eb05f654",
-                                   "link::dafc747f-8c95-11ef-944e-41a8eb05f654"]]
+                        for id in ["link::baseline_daily", "link::baseline_fixed", "link::baseline_monthly",
+                                   "link::baseline_subdaily", "link::mixed_layer_extremes",
+                                   "link::ocean_KE_vorticity_extremes", "link::ocean_acidification_oxygen_extremes",
+                                   "link::ocean_temperature_extremes", "link::sea_level_extremes", "link::sfc_waves",
+                                   "link::surgemip_variables"]]
         self.assertListEqual(self.dr.filter_elements_per_request("variable_groups",
-                                                                 requests=dict(experiment="527f5c48-8c97-11ef-944e-41a8eb05f654")),
+                                                                 requests=dict(experiment="scen7-hl-ext")),
                              list_var_grp)
         found_vargrp_all = self.dr.filter_elements_per_request("variable_groups",
-                                                               requests=dict(experiment="527f5c48-8c97-11ef-944e-41a8eb05f654"),
+                                                               requests=dict(experiment="scen7-hl-ext"),
                                                                not_requests=dict(
-                                                                   opportunity="dafc739f-8c95-11ef-944e-41a8eb05f654",
-                                                                   variable=["babb20b4-e5dd-11e5-8482-ac72891c3257", "d243ba76-4a9f-11e6-b84e-ac72891c3257"]),
+                                                                   opportunity="Effects and Feedbacks of Wind-Driven Ocean Surface Waves Coupled Within Earth System Models",
+                                                                   variable=["ocean.tos.tpt-u-hxy-sea.3hr.glb", "seaIce.sithick.tavg-u-hxy-si.day.glb"]),
                                                                not_request_operation="all")
         self.assertEqual(len(found_vargrp_all), len(list_var_grp))
         self.assertListEqual(found_vargrp_all, list_var_grp)
         found_vargrp_any = self.dr.filter_elements_per_request("variable_groups",
-                                                               requests=dict(experiment="527f5c48-8c97-11ef-944e-41a8eb05f654"),
+                                                               requests=dict(experiment="scen7-hl-ext"),
                                                                not_requests=dict(
-                                                                   opportunity="dafc739f-8c95-11ef-944e-41a8eb05f654",
-                                                                   variable=["babb20b4-e5dd-11e5-8482-ac72891c3257", "d243ba76-4a9f-11e6-b84e-ac72891c3257"]),
+                                                                   opportunity="Effects and Feedbacks of Wind-Driven Ocean Surface Waves Coupled Within Earth System Models",
+                                                                   variable=["ocean.tos.tpt-u-hxy-sea.3hr.glb", "seaIce.sithick.tavg-u-hxy-si.day.glb"]),
                                                                not_request_operation="any")
         list_vargrp_any = [self.dr.find_element("variable_group", elt)
-                           for elt in ["link::80ab73e2-a698-11ef-914a-613c0433d878", "link::dafc7436-8c95-11ef-944e-41a8eb05f654",
-                                       "link::dafc743a-8c95-11ef-944e-41a8eb05f654", "link::dafc7464-8c95-11ef-944e-41a8eb05f654"]]
+                           for elt in ["link::mixed_layer_extremes", "link::ocean_KE_vorticity_extremes",
+                                       "link::ocean_acidification_oxygen_extremes", "link::sea_level_extremes"]]
         self.assertEqual(len(found_vargrp_any), len(list_vargrp_any))
         self.assertListEqual(found_vargrp_any, list_vargrp_any)
         found_vargrp_anyofall = self.dr.filter_elements_per_request("variable_groups",
-                                                                    requests=dict(experiment="527f5c48-8c97-11ef-944e-41a8eb05f654"),
+                                                                    requests=dict(experiment="scen7-hl-ext"),
                                                                     not_requests=dict(
-                                                                        opportunity="dafc739f-8c95-11ef-944e-41a8eb05f654",
-                                                                        variable=["babb20b4-e5dd-11e5-8482-ac72891c3257", "d243ba76-4a9f-11e6-b84e-ac72891c3257"]),
+                                                                        opportunity="Effects and Feedbacks of Wind-Driven Ocean Surface Waves Coupled Within Earth System Models",
+                                                                        variable=["ocean.tos.tpt-u-hxy-sea.3hr.glb", "seaIce.sithick.tavg-u-hxy-si.day.glb"]),
                                                                     not_request_operation="any_of_all")
         list_vargrp_anyofall = [self.dr.find_element("variable_group", elt)
-                                for elt in ["link::80ab73e2-a698-11ef-914a-613c0433d878", "link::dafc7435-8c95-11ef-944e-41a8eb05f654",
-                                            "link::dafc7436-8c95-11ef-944e-41a8eb05f654", "link::dafc743a-8c95-11ef-944e-41a8eb05f654",
-                                            "link::dafc7464-8c95-11ef-944e-41a8eb05f654"]]
+                                for elt in ["link::mixed_layer_extremes", "link::ocean_KE_vorticity_extremes",
+                                            "link::ocean_acidification_oxygen_extremes", "link::ocean_temperature_extremes",
+                                            "link::sea_level_extremes"]]
         self.assertEqual(len(found_vargrp_anyofall), len(list_vargrp_anyofall))
         self.assertListEqual(found_vargrp_anyofall, list_vargrp_anyofall)
         found_vargrp_allofany = self.dr.filter_elements_per_request("variable_groups",
-                                                                    requests=dict(experiment="527f5c48-8c97-11ef-944e-41a8eb05f654"),
+                                                                    requests=dict(experiment="scen7-hl-ext"),
                                                                     not_requests=dict(
-                                                                        opportunity="dafc739f-8c95-11ef-944e-41a8eb05f654",
-                                                                        variable=["babb20b4-e5dd-11e5-8482-ac72891c3257", "d243ba76-4a9f-11e6-b84e-ac72891c3257"]),
+                                                                        opportunity="Effects and Feedbacks of Wind-Driven Ocean Surface Waves Coupled Within Earth System Models",
+                                                                        variable=["ocean.tos.tpt-u-hxy-sea.3hr.glb", "seaIce.sithick.tavg-u-hxy-si.day.glb"]),
                                                                     not_request_operation="all_of_any")
         self.assertEqual(len(found_vargrp_allofany), len(list_var_grp))
         self.assertListEqual(found_vargrp_allofany, list_var_grp)
         self.assertListEqual(self.dr.filter_elements_per_request("variable_groups",
-                                                                 requests=dict(experiment="527f5c48-8c97-11ef-944e-41a8eb05f654"),
-                                                                 not_requests=dict(opportunity="dafc739f-8c95-11ef-944e-41a8eb05f654")),
+                                                                 requests=dict(experiment="scen7-hl-ext"),
+                                                                 not_requests=dict(opportunity="Effects and Feedbacks of Wind-Driven Ocean Surface Waves Coupled Within Earth System Models")),
                              [self.dr.find_element("variable_group", elt)
-                              for elt in ["link::80ab73e2-a698-11ef-914a-613c0433d878", "link::dafc7435-8c95-11ef-944e-41a8eb05f654",
-                                          "link::dafc7436-8c95-11ef-944e-41a8eb05f654", "link::dafc743a-8c95-11ef-944e-41a8eb05f654",
-                                          "link::dafc7464-8c95-11ef-944e-41a8eb05f654", "link::dafc747f-8c95-11ef-944e-41a8eb05f654"]])
+                              for elt in ["link::mixed_layer_extremes", "link::ocean_KE_vorticity_extremes",
+                                          "link::ocean_acidification_oxygen_extremes", "link::ocean_temperature_extremes",
+                                          "link::sea_level_extremes", "link::surgemip_variables"]])
         self.assertListEqual(self.dr.filter_elements_per_request(self.dr.get_variable_groups(),
-                                                                 requests=dict(experiment="527f5c48-8c97-11ef-944e-41a8eb05f654")),
+                                                                 requests=dict(experiment="scen7-hl-ext")),
                              list_var_grp)
-        self.assertListEqual(self.dr.filter_elements_per_request(self.dr.get_variable_group("dafc7435-8c95-11ef-944e-41a8eb05f654"),
-                                                                 requests=dict(experiment="527f5c48-8c97-11ef-944e-41a8eb05f654")),
-                             [self.dr.find_element("variable_group", "dafc7435-8c95-11ef-944e-41a8eb05f654"), ])
+        self.assertListEqual(self.dr.filter_elements_per_request(self.dr.get_variable_group("ocean_temperature_extremes"),
+                                                                 requests=dict(experiment="scen7-hl-ext")),
+                             [self.dr.find_element("variable_group", "ocean_temperature_extremes"), ])
+        list_experiments_filtered = ["link::amip", "link::dcppB-forecast-cmip6", "link::esm-flat10", "link::esm-hist",
+                                     "link::esm-piControl", "link::esm-scen7-hl", "link::esm-scen7-m",
+                                     "link::esm-scen7-vl", "link::g7-1p5K-sai", "link::historical", "link::land-hist",
+                                     "link::piClim-NOX", "link::scen7-hl", "link::scen7-m", "link::scen7-vl"]
+        list_experiments_not_filtered = ["link::esm-scen7-hl-ext", "link::esm-scen7-m-ext", "link::esm-scen7-vl-ext",
+                                         "link::scen7-hl-ext", "link::scen7-m-ext", "link::scen7-vl-ext"]
+        self.assertListEqual(self.dr.filter_elements_per_request("experiment", requests=dict(experiment_group=["fast-track", "deck"]), request_operation="any"),
+                             [self.dr.find_element("experiment", elt) for elt in list_experiments_filtered])
+        self.assertListEqual(
+            self.dr.filter_elements_per_request("experiment", not_requests=dict(experiment_group=["fast-track", "deck"]), not_request_operation="any"),
+            [self.dr.find_element("experiment", elt) for elt in list_experiments_not_filtered])
 
     def test_find_variables_per_priority(self):
         priority = "Medium"
-        priority_obj = self.dr.find_element("priority_level", "link::527f5c95-8c97-11ef-944e-41a8eb05f654")
+        priority_obj = self.dr.find_element("priority_level", "link::Medium")
         target_var_list = [self.dr.find_element("variables", id)
-                           for id in ["link::80ab71f9-a698-11ef-914a-613c0433d878", "link::80ab71fa-a698-11ef-914a-613c0433d878",
-                                      "link::80ab71fb-a698-11ef-914a-613c0433d878", "link::80ab71fc-a698-11ef-914a-613c0433d878",
-                                      "link::80ab7430-a698-11ef-914a-613c0433d878", "link::80ab7431-a698-11ef-914a-613c0433d878",
-                                      "link::80ab7432-a698-11ef-914a-613c0433d878", "link::80ab7433-a698-11ef-914a-613c0433d878",
-                                      "link::80ab7434-a698-11ef-914a-613c0433d878", "link::80ab7435-a698-11ef-914a-613c0433d878",
-                                      "link::83bbfb6e-7f07-11ef-9308-b1dd71e64bec", "link::83bbfb71-7f07-11ef-9308-b1dd71e64bec",
-                                      "link::83bbfb7c-7f07-11ef-9308-b1dd71e64bec", "link::83bbfb7f-7f07-11ef-9308-b1dd71e64bec",
-                                      "link::83bbfb94-7f07-11ef-9308-b1dd71e64bec", "link::83bbfc6e-7f07-11ef-9308-b1dd71e64bec",
-                                      "link::83bbfc6f-7f07-11ef-9308-b1dd71e64bec", "link::ba9f3ac0-e5dd-11e5-8482-ac72891c3257",
-                                      "link::ba9f643c-e5dd-11e5-8482-ac72891c3257", "link::ba9f686a-e5dd-11e5-8482-ac72891c3257",
-                                      "link::ba9f91f0-e5dd-11e5-8482-ac72891c3257", "link::baa4e07e-e5dd-11e5-8482-ac72891c3257",
-                                      "link::baa720e6-e5dd-11e5-8482-ac72891c3257", "link::baa72514-e5dd-11e5-8482-ac72891c3257",
-                                      "link::bab52b5a-e5dd-11e5-8482-ac72891c3257", "link::bab59202-e5dd-11e5-8482-ac72891c3257",
-                                      "link::bab5df78-e5dd-11e5-8482-ac72891c3257", "link::bab65138-e5dd-11e5-8482-ac72891c3257",
-                                      "link::c9180bae-c5e8-11e6-84e6-5404a60d96b5", "link::c9181982-c5e8-11e6-84e6-5404a60d96b5"]]
+                           for id in ["link::atmos.rlds.tavg-u-hxy-u.3hr.glb", "link::atmos.rlus.tavg-u-hxy-u.3hr.glb",
+                                      "link::atmos.ta.tpt-p6-hxy-air.3hr.glb", "link::land.hfdsl.tavg-u-hxy-lnd.3hr.glb",
+                                      "link::land.mrsol.tavg-d100cm-hxy-lnd.3hr.glb", "link::land.tran.tavg-u-hxy-u.3hr.glb",
+                                      "link::ocean.so.tavg-ol-hxy-sea.day.glb", "link::ocean.sos.tavg-u-hxy-sea.day.glb",
+                                      "link::ocean.thetao.tavg-op20bar-hxy-sea.day.glb", "link::ocean.tnkebto.tavg-u-hxy-sea.yr.glb",
+                                      "link::ocean.tos.tavg-u-hxy-sea.day.glb", "link::ocean.uos.tavg-u-hxy-sea.day.glb",
+                                      "link::ocean.vos.tavg-u-hxy-sea.day.glb", "link::ocnBgchem.arag.tavg-ol-hxy-sea.mon.glb",
+                                      "link::ocnBgchem.arag.tavg-ols-hxy-sea.mon.glb", "link::ocnBgchem.calc.tavg-ol-hxy-sea.mon.glb",
+                                      "link::ocnBgchem.calc.tavg-ols-hxy-sea.mon.glb", "link::ocnBgchem.chl.tavg-op20bar-hxy-sea.day.glb",
+                                      "link::ocnBgchem.dissic.tavg-ol-hxy-sea.mon.glb", "link::ocnBgchem.o2.tavg-op20bar-hxy-sea.day.glb",
+                                      "link::ocnBgchem.ph.tavg-op20bar-hxy-sea.day.glb", "link::ocnBgchem.talk.tavg-ol-hxy-sea.mon.glb"]]
         var_list = self.dr.find_variables_per_priority(priority=priority)
-        self.assertEqual(len(var_list), 30)
+        self.assertEqual(len(var_list), 22)
         self.assertListEqual(var_list, target_var_list)
         var_list = self.dr.find_variables_per_priority(priority=priority_obj)
-        self.assertEqual(len(var_list), 30)
+        self.assertEqual(len(var_list), 22)
         self.assertListEqual(var_list, target_var_list)
 
     def test_find_opportunities_per_theme(self):
-        theme_id = "link::527f5c90-8c97-11ef-944e-41a8eb05f654"
+        theme_id = "link::atmosphere"
         theme_name = "Atmosphere"
         theme_target = self.dr.find_element("data_request_themes", theme_id)
         opportunities = [self.dr.get_opportunity(id)
-                         for id in ["link::dafc739e-8c95-11ef-944e-41a8eb05f654", "link::dafc739f-8c95-11ef-944e-41a8eb05f654",
-                                    "link::dafc73bd-8c95-11ef-944e-41a8eb05f654"]]
+                         for id in ["link::1", "link::68", "link::69"]]
         self.assertListEqual(self.dr.find_opportunities_per_theme(theme_id), opportunities)
         self.assertListEqual(self.dr.find_opportunities_per_theme(theme_name), opportunities)
         self.assertListEqual(self.dr.find_opportunities_per_theme(theme_target), opportunities)
@@ -1054,310 +1052,183 @@ class TestDataRequestFilter(unittest.TestCase):
             self.dr.find_opportunities_per_theme("link::toto")
 
     def test_find_experiments_per_theme(self):
-        theme_id = "link::527f5c90-8c97-11ef-944e-41a8eb05f654"
-        theme_name = "Atmosphere"
+        theme_id = "link::land_landice"
+        theme_name = "Land & Land-Ice"
         theme_target = self.dr.find_element("data_request_themes", theme_id)
         exp = [self.dr.find_element("experiments", id)
-               for id in ['link::527f5c3a-8c97-11ef-944e-41a8eb05f654', 'link::527f5c3b-8c97-11ef-944e-41a8eb05f654',
-                          'link::527f5c3c-8c97-11ef-944e-41a8eb05f654', 'link::527f5c3d-8c97-11ef-944e-41a8eb05f654',
-                          'link::527f5c3e-8c97-11ef-944e-41a8eb05f654', 'link::527f5c3f-8c97-11ef-944e-41a8eb05f654',
-                          'link::527f5c40-8c97-11ef-944e-41a8eb05f654', 'link::527f5c41-8c97-11ef-944e-41a8eb05f654',
-                          'link::527f5c42-8c97-11ef-944e-41a8eb05f654', 'link::527f5c43-8c97-11ef-944e-41a8eb05f654',
-                          'link::527f5c44-8c97-11ef-944e-41a8eb05f654', 'link::527f5c45-8c97-11ef-944e-41a8eb05f654',
-                          'link::527f5c46-8c97-11ef-944e-41a8eb05f654', 'link::527f5c47-8c97-11ef-944e-41a8eb05f654',
-                          'link::527f5c48-8c97-11ef-944e-41a8eb05f654', 'link::527f5c49-8c97-11ef-944e-41a8eb05f654',
-                          'link::527f5c4a-8c97-11ef-944e-41a8eb05f654', 'link::527f5c4b-8c97-11ef-944e-41a8eb05f654',
-                          'link::527f5c4c-8c97-11ef-944e-41a8eb05f654', 'link::527f5c4d-8c97-11ef-944e-41a8eb05f654',
-                          'link::527f5c4e-8c97-11ef-944e-41a8eb05f654', 'link::527f5c4f-8c97-11ef-944e-41a8eb05f654',
-                          'link::527f5c50-8c97-11ef-944e-41a8eb05f654', 'link::527f5c51-8c97-11ef-944e-41a8eb05f654',
-                          'link::527f5c52-8c97-11ef-944e-41a8eb05f654', 'link::527f5c53-8c97-11ef-944e-41a8eb05f654',
-                          'link::527f5c54-8c97-11ef-944e-41a8eb05f654', 'link::527f5c55-8c97-11ef-944e-41a8eb05f654',
-                          'link::527f5c56-8c97-11ef-944e-41a8eb05f654', 'link::527f5c57-8c97-11ef-944e-41a8eb05f654',
-                          'link::527f5c58-8c97-11ef-944e-41a8eb05f654', 'link::527f5c59-8c97-11ef-944e-41a8eb05f654',
-                          'link::527f5c5a-8c97-11ef-944e-41a8eb05f654', 'link::527f5c5b-8c97-11ef-944e-41a8eb05f654',
-                          'link::527f5c5c-8c97-11ef-944e-41a8eb05f654', 'link::527f5c5d-8c97-11ef-944e-41a8eb05f654',
-                          'link::527f5c5e-8c97-11ef-944e-41a8eb05f654', 'link::527f5c5f-8c97-11ef-944e-41a8eb05f654',
-                          'link::80ab724d-a698-11ef-914a-613c0433d878', 'link::80ab72ae-a698-11ef-914a-613c0433d878',
-                          'link::80ab72af-a698-11ef-914a-613c0433d878', 'link::80ab72b0-a698-11ef-914a-613c0433d878',
-                          'link::80ab72b1-a698-11ef-914a-613c0433d878', 'link::80ab72b2-a698-11ef-914a-613c0433d878',
-                          'link::80ab72b3-a698-11ef-914a-613c0433d878', 'link::80ab72b4-a698-11ef-914a-613c0433d878',
-                          'link::80ab72b5-a698-11ef-914a-613c0433d878', 'link::80ab72b6-a698-11ef-914a-613c0433d878',
-                          'link::80ab72b7-a698-11ef-914a-613c0433d878', 'link::80ab72b8-a698-11ef-914a-613c0433d878',
-                          'link::80ab72b9-a698-11ef-914a-613c0433d878', 'link::80ab72ba-a698-11ef-914a-613c0433d878',
-                          'link::80ab72bb-a698-11ef-914a-613c0433d878', 'link::80ab72bc-a698-11ef-914a-613c0433d878',
-                          'link::80ab72bd-a698-11ef-914a-613c0433d878', 'link::80ab72be-a698-11ef-914a-613c0433d878',
-                          'link::80ab72bf-a698-11ef-914a-613c0433d878', 'link::80ab72c0-a698-11ef-914a-613c0433d878',
-                          'link::80ab72c1-a698-11ef-914a-613c0433d878', 'link::80ab72c2-a698-11ef-914a-613c0433d878',
-                          'link::80ab72c3-a698-11ef-914a-613c0433d878', 'link::80ab72c4-a698-11ef-914a-613c0433d878',
-                          'link::80ab72c5-a698-11ef-914a-613c0433d878', 'link::80ab72c6-a698-11ef-914a-613c0433d878',
-                          'link::80ab72c7-a698-11ef-914a-613c0433d878', 'link::80ab72cc-a698-11ef-914a-613c0433d878',
-                          'link::80ab72cd-a698-11ef-914a-613c0433d878', 'link::80ab72ce-a698-11ef-914a-613c0433d878',
-                          'link::80ab72cf-a698-11ef-914a-613c0433d878', 'link::80ab72d0-a698-11ef-914a-613c0433d878',
-                          'link::80ab72d1-a698-11ef-914a-613c0433d878', 'link::80ab72d2-a698-11ef-914a-613c0433d878',
-                          'link::80ab73b0-a698-11ef-914a-613c0433d878', 'link::80ab73b1-a698-11ef-914a-613c0433d878',
-                          'link::80ab73b2-a698-11ef-914a-613c0433d878', 'link::80ab73b3-a698-11ef-914a-613c0433d878',
-                          'link::80ab73b4-a698-11ef-914a-613c0433d878', 'link::80ab73b5-a698-11ef-914a-613c0433d878',
-                          'link::80ab73b6-a698-11ef-914a-613c0433d878', 'link::80ab73b7-a698-11ef-914a-613c0433d878',
-                          'link::80ab73b8-a698-11ef-914a-613c0433d878', 'link::80ab73b9-a698-11ef-914a-613c0433d878',
-                          'link::80ab73ba-a698-11ef-914a-613c0433d878', 'link::80ab73bb-a698-11ef-914a-613c0433d878',
-                          'link::80ab73e9-a698-11ef-914a-613c0433d878', 'link::80ab73ea-a698-11ef-914a-613c0433d878',
-                          'link::80ab73eb-a698-11ef-914a-613c0433d878', 'link::80ab73ee-a698-11ef-914a-613c0433d878',
-                          'link::80ab73f0-a698-11ef-914a-613c0433d878', 'link::80ab73f1-a698-11ef-914a-613c0433d878']]
+               for id in ["link::amip", "link::dcppB-forecast-cmip6", "link::esm-flat10", "link::esm-hist",
+                          "link::esm-piControl", "link::esm-scen7-hl", "link::esm-scen7-m", "link::esm-scen7-vl",
+                          "link::g7-1p5K-sai", "link::historical", "link::land-hist", "link::piClim-NOX",
+                          "link::scen7-hl", "link::scen7-m", "link::scen7-vl"]]
         self.assertListEqual(self.dr.find_experiments_per_theme(theme_id), exp)
         self.assertListEqual(self.dr.find_experiments_per_theme(theme_name), exp)
         self.assertListEqual(self.dr.find_experiments_per_theme(theme_target), exp)
 
     def test_find_variables_per_theme(self):
-        theme_id = "link::527f5c90-8c97-11ef-944e-41a8eb05f654"
-        theme_name = "Atmosphere"
+        theme_id = "link::land_landice"
+        theme_name = "Land & Land-Ice"
         theme_target = self.dr.find_element("data_request_themes", theme_id)
         var = [self.dr.find_element("variables", id)
-               for id in ['link::1aab80fc-b006-11e6-9289-ac72891c3257', 'link::5a070350-c77d-11e6-8a33-5404a60d96b5',
-                          'link::6a35d178-aa6a-11e6-9736-5404a60d96b5', 'link::711075e2-faa7-11e6-bfb7-ac72891c3257',
-                          'link::71237944-faa7-11e6-bfb7-ac72891c3257', 'link::714344cc-faa7-11e6-bfb7-ac72891c3257',
-                          'link::7147b8fe-faa7-11e6-bfb7-ac72891c3257', 'link::714b603a-faa7-11e6-bfb7-ac72891c3257',
-                          'link::714eec6e-faa7-11e6-bfb7-ac72891c3257', 'link::80ab71f6-a698-11ef-914a-613c0433d878',
-                          'link::80ab71f9-a698-11ef-914a-613c0433d878', 'link::80ab71fa-a698-11ef-914a-613c0433d878',
-                          'link::80ab71fb-a698-11ef-914a-613c0433d878', 'link::80ab71fc-a698-11ef-914a-613c0433d878',
-                          'link::80ab71fd-a698-11ef-914a-613c0433d878', 'link::80ab740d-a698-11ef-914a-613c0433d878',
-                          'link::80ab740e-a698-11ef-914a-613c0433d878', 'link::80ab740f-a698-11ef-914a-613c0433d878',
-                          'link::80ab7410-a698-11ef-914a-613c0433d878', 'link::80ab7416-a698-11ef-914a-613c0433d878',
-                          'link::80ab7417-a698-11ef-914a-613c0433d878', 'link::80ab7418-a698-11ef-914a-613c0433d878',
-                          'link::80ab7419-a698-11ef-914a-613c0433d878', 'link::80ab741a-a698-11ef-914a-613c0433d878',
-                          'link::80ab741b-a698-11ef-914a-613c0433d878', 'link::80ab741c-a698-11ef-914a-613c0433d878',
-                          'link::80ab741d-a698-11ef-914a-613c0433d878', 'link::80ab741e-a698-11ef-914a-613c0433d878',
-                          'link::80ab741f-a698-11ef-914a-613c0433d878', 'link::80ab7420-a698-11ef-914a-613c0433d878',
-                          'link::80ab7421-a698-11ef-914a-613c0433d878', 'link::80ab7422-a698-11ef-914a-613c0433d878',
-                          'link::80ab7423-a698-11ef-914a-613c0433d878', 'link::80ab7424-a698-11ef-914a-613c0433d878',
-                          'link::80ab7425-a698-11ef-914a-613c0433d878', 'link::80ab7426-a698-11ef-914a-613c0433d878',
-                          'link::80ab7427-a698-11ef-914a-613c0433d878', 'link::80ab7428-a698-11ef-914a-613c0433d878',
-                          'link::80ab7429-a698-11ef-914a-613c0433d878', 'link::80ab742a-a698-11ef-914a-613c0433d878',
-                          'link::80ab742b-a698-11ef-914a-613c0433d878', 'link::80ab742c-a698-11ef-914a-613c0433d878',
-                          'link::80ab742d-a698-11ef-914a-613c0433d878', 'link::80ab742e-a698-11ef-914a-613c0433d878',
-                          'link::80ab7430-a698-11ef-914a-613c0433d878', 'link::80ab7431-a698-11ef-914a-613c0433d878',
-                          'link::80ab7432-a698-11ef-914a-613c0433d878', 'link::80ab7433-a698-11ef-914a-613c0433d878',
-                          'link::80ab7434-a698-11ef-914a-613c0433d878', 'link::80ab7435-a698-11ef-914a-613c0433d878',
-                          'link::80ab743a-a698-11ef-914a-613c0433d878', 'link::80ab743b-a698-11ef-914a-613c0433d878',
-                          'link::80ab743c-a698-11ef-914a-613c0433d878', 'link::80ab743d-a698-11ef-914a-613c0433d878',
-                          'link::80ab743e-a698-11ef-914a-613c0433d878', 'link::80ab743f-a698-11ef-914a-613c0433d878',
-                          'link::80ab7440-a698-11ef-914a-613c0433d878', 'link::80ab7441-a698-11ef-914a-613c0433d878',
-                          'link::80ab7442-a698-11ef-914a-613c0433d878', 'link::80ab7443-a698-11ef-914a-613c0433d878',
-                          'link::80ab7444-a698-11ef-914a-613c0433d878', 'link::80ab7449-a698-11ef-914a-613c0433d878',
-                          'link::80ab744a-a698-11ef-914a-613c0433d878', 'link::80ab744b-a698-11ef-914a-613c0433d878',
-                          'link::80ab744c-a698-11ef-914a-613c0433d878', 'link::80ab744d-a698-11ef-914a-613c0433d878',
-                          'link::80ab744e-a698-11ef-914a-613c0433d878', 'link::83bbfb69-7f07-11ef-9308-b1dd71e64bec',
-                          'link::83bbfc71-7f07-11ef-9308-b1dd71e64bec', 'link::85c3e888-357c-11e7-8257-5404a60d96b5',
-                          'link::86119ff6-357c-11e7-8257-5404a60d96b5', 'link::8bae55ba-4a5b-11e6-9cd2-ac72891c3257',
-                          'link::8bae5aba-4a5b-11e6-9cd2-ac72891c3257', 'link::8baebea6-4a5b-11e6-9cd2-ac72891c3257',
-                          'link::917b8532-267c-11e7-8933-ac72891c3257', 'link::baa3e4d0-e5dd-11e5-8482-ac72891c3257',
-                          'link::baa3ea2a-e5dd-11e5-8482-ac72891c3257', 'link::baa3ee94-e5dd-11e5-8482-ac72891c3257',
-                          'link::baa3f2e0-e5dd-11e5-8482-ac72891c3257', 'link::baa3f718-e5dd-11e5-8482-ac72891c3257',
-                          'link::baa3fb50-e5dd-11e5-8482-ac72891c3257', 'link::baa507f2-e5dd-11e5-8482-ac72891c3257',
-                          'link::baa51058-e5dd-11e5-8482-ac72891c3257', 'link::baa5147c-e5dd-11e5-8482-ac72891c3257',
-                          'link::baa518c8-e5dd-11e5-8482-ac72891c3257', 'link::baa51d00-e5dd-11e5-8482-ac72891c3257',
-                          'link::baa5255c-e5dd-11e5-8482-ac72891c3257', 'link::baa52de0-e5dd-11e5-8482-ac72891c3257',
-                          'link::baa5491a-e5dd-11e5-8482-ac72891c3257', 'link::baa557f2-e5dd-11e5-8482-ac72891c3257',
-                          'link::baa57688-e5dd-11e5-8482-ac72891c3257', 'link::baa586e6-e5dd-11e5-8482-ac72891c3257',
-                          'link::baa58b1e-e5dd-11e5-8482-ac72891c3257', 'link::baa58f74-e5dd-11e5-8482-ac72891c3257',
-                          'link::baa5942e-e5dd-11e5-8482-ac72891c3257', 'link::baa598c0-e5dd-11e5-8482-ac72891c3257',
-                          'link::baa6c33a-e5dd-11e5-8482-ac72891c3257', 'link::baa6cf38-e5dd-11e5-8482-ac72891c3257',
-                          'link::baa6d366-e5dd-11e5-8482-ac72891c3257', 'link::baa720e6-e5dd-11e5-8482-ac72891c3257',
-                          'link::baa72514-e5dd-11e5-8482-ac72891c3257', 'link::baa83a12-e5dd-11e5-8482-ac72891c3257',
-                          'link::baaa4302-e5dd-11e5-8482-ac72891c3257', 'link::baaa8326-e5dd-11e5-8482-ac72891c3257',
-                          'link::baaa9852-e5dd-11e5-8482-ac72891c3257', 'link::baaace4e-e5dd-11e5-8482-ac72891c3257',
-                          'link::baaad7e0-e5dd-11e5-8482-ac72891c3257', 'link::baab0382-e5dd-11e5-8482-ac72891c3257',
-                          'link::baab1818-e5dd-11e5-8482-ac72891c3257', 'link::baad45c0-e5dd-11e5-8482-ac72891c3257',
-                          'link::baad5d9e-e5dd-11e5-8482-ac72891c3257', 'link::baad6596-e5dd-11e5-8482-ac72891c3257',
-                          'link::baaefbcc-e5dd-11e5-8482-ac72891c3257', 'link::baaefe2e-e5dd-11e5-8482-ac72891c3257',
-                          'link::baaf8452-e5dd-11e5-8482-ac72891c3257', 'link::baaf86a0-e5dd-11e5-8482-ac72891c3257',
-                          'link::baafe578-e5dd-11e5-8482-ac72891c3257', 'link::baafec80-e5dd-11e5-8482-ac72891c3257',
-                          'link::baaff41e-e5dd-11e5-8482-ac72891c3257', 'link::bab00b98-e5dd-11e5-8482-ac72891c3257',
-                          'link::bab0135e-e5dd-11e5-8482-ac72891c3257', 'link::bab01dfe-e5dd-11e5-8482-ac72891c3257',
-                          'link::bab0238a-e5dd-11e5-8482-ac72891c3257', 'link::bab034a6-e5dd-11e5-8482-ac72891c3257',
-                          'link::bab0919e-e5dd-11e5-8482-ac72891c3257', 'link::bab1688a-e5dd-11e5-8482-ac72891c3257',
-                          'link::bab17a6e-e5dd-11e5-8482-ac72891c3257', 'link::bab19ff8-e5dd-11e5-8482-ac72891c3257',
-                          'link::bab1a782-e5dd-11e5-8482-ac72891c3257', 'link::bab1c08c-e5dd-11e5-8482-ac72891c3257',
-                          'link::bab1c668-e5dd-11e5-8482-ac72891c3257', 'link::bab1c85c-e5dd-11e5-8482-ac72891c3257',
-                          'link::bab2f9d4-e5dd-11e5-8482-ac72891c3257', 'link::bab3c904-e5dd-11e5-8482-ac72891c3257',
-                          'link::bab3cb52-e5dd-11e5-8482-ac72891c3257', 'link::bab3d692-e5dd-11e5-8482-ac72891c3257',
-                          'link::bab3f8a2-e5dd-11e5-8482-ac72891c3257', 'link::bab42b88-e5dd-11e5-8482-ac72891c3257',
-                          'link::bab45df6-e5dd-11e5-8482-ac72891c3257', 'link::bab46db4-e5dd-11e5-8482-ac72891c3257',
-                          'link::bab47354-e5dd-11e5-8482-ac72891c3257', 'link::bab47b56-e5dd-11e5-8482-ac72891c3257',
-                          'link::bab48ce0-e5dd-11e5-8482-ac72891c3257', 'link::bab491f4-e5dd-11e5-8482-ac72891c3257',
-                          'link::bab52b5a-e5dd-11e5-8482-ac72891c3257', 'link::bab52da8-e5dd-11e5-8482-ac72891c3257',
-                          'link::bab5540e-e5dd-11e5-8482-ac72891c3257', 'link::bab578d0-e5dd-11e5-8482-ac72891c3257',
-                          'link::bab59202-e5dd-11e5-8482-ac72891c3257', 'link::bab5aad0-e5dd-11e5-8482-ac72891c3257',
-                          'link::bab5bcdc-e5dd-11e5-8482-ac72891c3257', 'link::bab5c7fe-e5dd-11e5-8482-ac72891c3257',
-                          'link::bab5df78-e5dd-11e5-8482-ac72891c3257', 'link::bab5e1b2-e5dd-11e5-8482-ac72891c3257',
-                          'link::bab5ecd4-e5dd-11e5-8482-ac72891c3257', 'link::bab607c8-e5dd-11e5-8482-ac72891c3257',
-                          'link::bab6219a-e5dd-11e5-8482-ac72891c3257', 'link::bab65138-e5dd-11e5-8482-ac72891c3257',
-                          'link::bab6537c-e5dd-11e5-8482-ac72891c3257', 'link::bab670b4-e5dd-11e5-8482-ac72891c3257',
-                          'link::bab68ebe-e5dd-11e5-8482-ac72891c3257', 'link::bab69c06-e5dd-11e5-8482-ac72891c3257',
-                          'link::bab6f494-e5dd-11e5-8482-ac72891c3257', 'link::bab6fe58-e5dd-11e5-8482-ac72891c3257',
-                          'link::bab73a76-e5dd-11e5-8482-ac72891c3257', 'link::bab742c8-e5dd-11e5-8482-ac72891c3257',
-                          'link::bab7c2d4-e5dd-11e5-8482-ac72891c3257', 'link::bab81e50-e5dd-11e5-8482-ac72891c3257',
-                          'link::bab8fa0a-e5dd-11e5-8482-ac72891c3257', 'link::bab902e8-e5dd-11e5-8482-ac72891c3257',
-                          'link::bab91b20-e5dd-11e5-8482-ac72891c3257', 'link::bab9237c-e5dd-11e5-8482-ac72891c3257',
-                          'link::bab928ae-e5dd-11e5-8482-ac72891c3257', 'link::bab942a8-e5dd-11e5-8482-ac72891c3257',
-                          'link::bab94a50-e5dd-11e5-8482-ac72891c3257', 'link::bab955ea-e5dd-11e5-8482-ac72891c3257',
-                          'link::bab95fae-e5dd-11e5-8482-ac72891c3257', 'link::bab96cc4-e5dd-11e5-8482-ac72891c3257',
-                          'link::bab9888a-e5dd-11e5-8482-ac72891c3257', 'link::bab9bd00-e5dd-11e5-8482-ac72891c3257',
-                          'link::babaef0e-e5dd-11e5-8482-ac72891c3257', 'link::babb12ae-e5dd-11e5-8482-ac72891c3257',
-                          'link::babb4b34-e5dd-11e5-8482-ac72891c3257', 'link::babb5084-e5dd-11e5-8482-ac72891c3257',
-                          'link::babb5db8-e5dd-11e5-8482-ac72891c3257', 'link::babb67c2-e5dd-11e5-8482-ac72891c3257',
-                          'link::babb6cea-e5dd-11e5-8482-ac72891c3257', 'link::babbb25e-e5dd-11e5-8482-ac72891c3257',
-                          'link::babbbbe6-e5dd-11e5-8482-ac72891c3257', 'link::babbcd34-e5dd-11e5-8482-ac72891c3257',
-                          'link::babbd25c-e5dd-11e5-8482-ac72891c3257', 'link::babbdec8-e5dd-11e5-8482-ac72891c3257',
-                          'link::babd0906-e5dd-11e5-8482-ac72891c3257', 'link::babd0e56-e5dd-11e5-8482-ac72891c3257',
-                          'link::babd9ace-e5dd-11e5-8482-ac72891c3257', 'link::babda032-e5dd-11e5-8482-ac72891c3257',
-                          'link::d241a6d2-4a9f-11e6-b84e-ac72891c3257', 'link::f2fad86e-c38d-11e6-abc1-1b922e5e1118']]
+               for id in ["link::atmos.areacella.ti-u-hxy-u.fx.glb", "link::atmos.bldep.tpt-u-hxy-u.3hr.glb",
+                          "link::atmos.hfls.tavg-u-hxy-u.3hr.glb", "link::atmos.hfss.tavg-u-hxy-u.3hr.glb",
+                          "link::atmos.hurs.tavg-h2m-hxy-u.6hr.glb", "link::atmos.huss.tpt-h2m-hxy-u.3hr.glb",
+                          "link::atmos.pr.tavg-u-hxy-u.1hr.glb", "link::atmos.pr.tavg-u-hxy-u.3hr.glb",
+                          "link::atmos.pr.tavg-u-hxy-u.day.glb", "link::atmos.pr.tavg-u-hxy-u.mon.glb",
+                          "link::atmos.prc.tavg-u-hxy-u.mon.glb", "link::atmos.ps.tavg-u-hxy-u.day.glb",
+                          "link::atmos.ps.tpt-u-hxy-u.3hr.glb", "link::atmos.psl.tavg-u-hxy-u.day.glb",
+                          "link::atmos.rlds.tavg-u-hxy-u.3hr.glb", "link::atmos.rlus.tavg-u-hxy-u.3hr.glb",
+                          "link::atmos.sfcWind.tavg-h10m-hxy-u.day.glb", "link::atmos.sfcWind.tavg-h10m-hxy-u.mon.glb",
+                          "link::atmos.sftlf.ti-u-hxy-u.fx.glb", "link::atmos.ta.tavg-p19-hxy-air.day.glb",
+                          "link::atmos.ta.tavg-p19-hxy-air.mon.glb", "link::atmos.ta.tpt-p3-hxy-air.6hr.glb",
+                          "link::atmos.ta.tpt-p6-hxy-air.3hr.glb", "link::atmos.tas.tavg-h2m-hxy-u.day.glb",
+                          "link::atmos.tas.tavg-h2m-hxy-u.mon.glb", "link::atmos.tas.tmax-h2m-hxy-u.day.glb",
+                          "link::atmos.tas.tmaxavg-h2m-hxy-u.mon.glb", "link::atmos.tas.tmin-h2m-hxy-u.day.glb",
+                          "link::atmos.tas.tminavg-h2m-hxy-u.mon.glb", "link::atmos.tas.tpt-h2m-hxy-u.3hr.glb",
+                          "link::atmos.ts.tavg-u-hxy-u.mon.glb", "link::atmos.zg.tavg-p19-hxy-air.day.glb",
+                          "link::atmos.zg.tavg-p19-hxy-air.mon.glb", "link::land.hfdsl.tavg-u-hxy-lnd.3hr.glb",
+                          "link::land.lai.tavg-u-hxy-lnd.mon.glb", "link::land.mrso.tavg-u-hxy-lnd.mon.glb",
+                          "link::land.mrsofc.ti-u-hxy-lnd.fx.glb", "link::land.mrsol.tavg-d100cm-hxy-lnd.3hr.glb",
+                          "land.mrsol.tavg-d10cm-hxy-lnd.mon.glb", "link::land.mrsol.tpt-d10cm-hxy-lnd.3hr.glb",
+                          "link::land.orog.ti-u-hxy-u.fx.glb", "link::land.rootd.ti-u-hxy-lnd.fx.glb",
+                          "link::land.sftgif.ti-u-hxy-u.fx.glb", "link::land.slthick.ti-sl-hxy-lnd.fx.glb",
+                          "link::land.srfrad.tavg-u-hxy-u.3hr.glb", "link::land.tran.tavg-u-hxy-u.3hr.glb",
+                          "link::land.tslsi.tpt-u-hxy-lsi.3hr.glb", "link::landIce.snc.tavg-u-hxy-lnd.mon.glb",
+                          "link::ocean.areacello.ti-u-hxy-u.fx.glb", "link::ocean.basin.ti-u-hxy-u.fx.glb",
+                          "link::ocean.bigthetao.tavg-ol-hxy-sea.mon.glb", "link::ocean.deptho.ti-u-hxy-sea.fx.glb",
+                          "link::ocean.hfgeou.ti-u-hxy-sea.fx.glb", "link::ocean.masscello.ti-ol-hxy-sea.fx.glb",
+                          "link::ocean.sftof.ti-u-hxy-u.fx.glb", "link::ocean.so.tavg-ol-hxy-sea.mon.glb",
+                          "link::ocean.sos.tavg-u-hxy-sea.day.glb", "link::ocean.sos.tavg-u-hxy-sea.mon.glb",
+                          "link::ocean.thetao.tavg-ol-hxy-sea.mon.glb", "link::ocean.thkcello.ti-ol-hxy-sea.fx.glb",
+                          "link::ocean.tos.tavg-u-hxy-sea.day.glb", "link::ocean.tos.tavg-u-hxy-sea.mon.glb",
+                          "link::ocean.wo.tavg-ol-hxy-sea.mon.glb", "link::ocean.zos.tavg-u-hxy-sea.day.glb",
+                          "link::ocean.zos.tavg-u-hxy-sea.mon.glb", "link::ocean.zostoga.tavg-u-hm-sea.mon.glb",
+                          "link::seaIce.siconc.tavg-u-hxy-u.day.glb", "link::seaIce.siconc.tavg-u-hxy-u.mon.glb",
+                          "link::seaIce.simass.tavg-u-hxy-si.mon.glb", "link::seaIce.sithick.tavg-u-hxy-si.mon.glb",
+                          "link::seaIce.siu.tavg-u-hxy-si.mon.glb", "link::seaIce.siv.tavg-u-hxy-si.mon.glb"]]
         self.assertListEqual(self.dr.find_variables_per_theme(theme_id), var)
         self.assertListEqual(self.dr.find_variables_per_theme(theme_name), var)
         self.assertListEqual(self.dr.find_variables_per_theme(theme_target), var)
 
     def test_find_mips_per_theme(self):
-        theme_id = "link::527f5c90-8c97-11ef-944e-41a8eb05f654"
+        theme_id = "link::atmosphere"
         theme_name = "Atmosphere"
         theme_target = self.dr.find_element("data_request_themes", theme_id)
         mips = [self.dr.find_element("mips", id)
-                for id in ["link::527f5c6c-8c97-11ef-944e-41a8eb05f654", "link::527f5c6d-8c97-11ef-944e-41a8eb05f654",
-                           "link::527f5c6e-8c97-11ef-944e-41a8eb05f654", "link::527f5c70-8c97-11ef-944e-41a8eb05f654",
-                           "link::527f5c74-8c97-11ef-944e-41a8eb05f654", "link::527f5c75-8c97-11ef-944e-41a8eb05f654",
-                           "link::527f5c76-8c97-11ef-944e-41a8eb05f654", "link::527f5c77-8c97-11ef-944e-41a8eb05f654",
-                           "link::527f5c83-8c97-11ef-944e-41a8eb05f654"]]
+                for id in ["link::AerChemMIP2", "link::CMIP", "link::DAMIP", "link::DCPP", "link::FireMIP",
+                           "link::GeoMIP", "link::HighResMIP", "link::LUMIP", "link::PMIP", "link::ScenarioMIP",
+                           "link::TIPMIP"]]
         self.assertListEqual(self.dr.find_mips_per_theme(theme_id), mips)
         self.assertListEqual(self.dr.find_mips_per_theme(theme_name), mips)
         self.assertListEqual(self.dr.find_mips_per_theme(theme_target), mips)
 
     def test_themes_per_opportunity(self):
-        op_id = "link::dafc73bd-8c95-11ef-944e-41a8eb05f654"
+        op_id = "link::Accurate assessment of land-atmosphere coupling"
         op_name = "Accurate assessment of land-atmosphere coupling"
         op_target = self.dr.find_element("opportunities", op_id)
         themes = [self.dr.find_element("data_request_themes", id)
-                  for id in ["link::527f5c90-8c97-11ef-944e-41a8eb05f654", "link::527f5c91-8c97-11ef-944e-41a8eb05f654"]]
+                  for id in ["link::atmosphere", "link::land_landice"]]
         self.assertListEqual(self.dr.find_themes_per_opportunity(op_id), themes)
         self.assertListEqual(self.dr.find_themes_per_opportunity(op_name), themes)
         self.assertListEqual(self.dr.find_themes_per_opportunity(op_target), themes)
 
     def test_experiments_per_opportunity(self):
-        op_id = "link::dafc73bd-8c95-11ef-944e-41a8eb05f654"
+        op_id = "link::Accurate assessment of land-atmosphere coupling"
         op_name = "Accurate assessment of land-atmosphere coupling"
         op_target = self.dr.find_element("opportunities", op_id)
         exp = [self.dr.find_element("experiments", id)
-               for id in ["link::527f5c3d-8c97-11ef-944e-41a8eb05f654", "link::527f5c3f-8c97-11ef-944e-41a8eb05f654",
-                          "link::527f5c5a-8c97-11ef-944e-41a8eb05f654", "link::527f5c5b-8c97-11ef-944e-41a8eb05f654",
-                          "link::527f5c5c-8c97-11ef-944e-41a8eb05f654", "link::527f5c5d-8c97-11ef-944e-41a8eb05f654",
-                          "link::527f5c5e-8c97-11ef-944e-41a8eb05f654", "link::527f5c5f-8c97-11ef-944e-41a8eb05f654",
-                          "link::80ab72ae-a698-11ef-914a-613c0433d878", "link::80ab72af-a698-11ef-914a-613c0433d878",
-                          "link::80ab72b0-a698-11ef-914a-613c0433d878", "link::80ab72b1-a698-11ef-914a-613c0433d878",
-                          "link::80ab72b2-a698-11ef-914a-613c0433d878", "link::80ab72b3-a698-11ef-914a-613c0433d878"]]
+               for id in ["link::esm-hist", "link::esm-scen7-hl", "link::esm-scen7-m", "link::esm-scen7-vl",
+                          "link::historical", "link::scen7-hl", "link::scen7-m", "link::scen7-vl"]]
         self.assertListEqual(self.dr.find_experiments_per_opportunity(op_id), exp)
         self.assertListEqual(self.dr.find_experiments_per_opportunity(op_name), exp)
         self.assertListEqual(self.dr.find_experiments_per_opportunity(op_target), exp)
 
     def test_variables_per_opportunity(self):
-        op_id = "link::dafc73bd-8c95-11ef-944e-41a8eb05f654"
+        op_id = "link::Accurate assessment of land-atmosphere coupling"
         op_name = "Accurate assessment of land-atmosphere coupling"
         op_target = self.dr.find_element("opportunities", op_id)
         var = [self.dr.find_element("variables", id)
-               for id in ['link::80ab71f9-a698-11ef-914a-613c0433d878', 'link::80ab71fa-a698-11ef-914a-613c0433d878',
-                          'link::80ab71fb-a698-11ef-914a-613c0433d878', 'link::80ab71fc-a698-11ef-914a-613c0433d878',
-                          'link::80ab71fd-a698-11ef-914a-613c0433d878', 'link::80ab7430-a698-11ef-914a-613c0433d878',
-                          'link::80ab7431-a698-11ef-914a-613c0433d878', 'link::80ab7432-a698-11ef-914a-613c0433d878',
-                          'link::80ab7433-a698-11ef-914a-613c0433d878', 'link::80ab7434-a698-11ef-914a-613c0433d878',
-                          'link::80ab7435-a698-11ef-914a-613c0433d878', 'link::83bbfc71-7f07-11ef-9308-b1dd71e64bec',
-                          'link::baaefbcc-e5dd-11e5-8482-ac72891c3257', 'link::baaf8452-e5dd-11e5-8482-ac72891c3257',
-                          'link::bab034a6-e5dd-11e5-8482-ac72891c3257', 'link::bab1c668-e5dd-11e5-8482-ac72891c3257',
-                          'link::bab3c904-e5dd-11e5-8482-ac72891c3257', 'link::bab47354-e5dd-11e5-8482-ac72891c3257',
-                          'link::bab52b5a-e5dd-11e5-8482-ac72891c3257', 'link::bab59202-e5dd-11e5-8482-ac72891c3257',
-                          'link::bab5df78-e5dd-11e5-8482-ac72891c3257', 'link::bab65138-e5dd-11e5-8482-ac72891c3257',
-                          'link::bab91b20-e5dd-11e5-8482-ac72891c3257', 'link::babb12ae-e5dd-11e5-8482-ac72891c3257']]
+               for id in ["link::atmos.bldep.tpt-u-hxy-u.3hr.glb", "link::atmos.hfls.tavg-u-hxy-u.3hr.glb",
+                          "link::atmos.hfss.tavg-u-hxy-u.3hr.glb", "link::atmos.huss.tpt-h2m-hxy-u.3hr.glb",
+                          "link::atmos.pr.tavg-u-hxy-u.3hr.glb", "link::atmos.ps.tpt-u-hxy-u.3hr.glb",
+                          "link::atmos.rlds.tavg-u-hxy-u.3hr.glb", "link::atmos.rlus.tavg-u-hxy-u.3hr.glb",
+                          "link::atmos.ta.tpt-p6-hxy-air.3hr.glb", "link::atmos.tas.tpt-h2m-hxy-u.3hr.glb",
+                          "link::land.hfdsl.tavg-u-hxy-lnd.3hr.glb", "link::land.mrsol.tavg-d100cm-hxy-lnd.3hr.glb",
+                          "link::land.mrsol.tpt-d10cm-hxy-lnd.3hr.glb", "link::land.srfrad.tavg-u-hxy-u.3hr.glb",
+                          "link::land.tran.tavg-u-hxy-u.3hr.glb", "link::land.tslsi.tpt-u-hxy-lsi.3hr.glb"]]
         self.assertListEqual(self.dr.find_variables_per_opportunity(op_id), var)
         self.assertListEqual(self.dr.find_variables_per_opportunity(op_name), var)
         self.assertListEqual(self.dr.find_variables_per_opportunity(op_target), var)
 
     def test_mips_per_opportunity(self):
-        op_id = "link::dafc73bd-8c95-11ef-944e-41a8eb05f654"
+        op_id = "link::Accurate assessment of land-atmosphere coupling"
         op_name = "Accurate assessment of land-atmosphere coupling"
         op_target = self.dr.find_element("opportunities", op_id)
         mips = [self.dr.find_element("mips", id)
-                for id in ["link::527f5c6d-8c97-11ef-944e-41a8eb05f654", "link::527f5c74-8c97-11ef-944e-41a8eb05f654",
-                           "link::527f5c75-8c97-11ef-944e-41a8eb05f654", "link::527f5c76-8c97-11ef-944e-41a8eb05f654",
-                           "link::527f5c77-8c97-11ef-944e-41a8eb05f654"]]
+                for id in ["link::CMIP", "link::DAMIP", "link::HighResMIP", "link::LUMIP", "link::ScenarioMIP"]]
         self.assertListEqual(self.dr.find_mips_per_opportunity(op_id), mips)
         self.assertListEqual(self.dr.find_mips_per_opportunity(op_name), mips)
         self.assertListEqual(self.dr.find_mips_per_opportunity(op_target), mips)
 
     def test_opportunities_per_variable(self):
-        var_id = "link::83bbfb69-7f07-11ef-9308-b1dd71e64bec"
-        var_name = "ocean.zos.tavg-u-hxy-sea.day.GLB"
+        var_id = "link::ocean.zos.tavg-u-hxy-sea.day.glb"
+        var_name = "ocean.zos.tavg-u-hxy-sea.day.glb"
         var_target = self.dr.find_element("variables", var_id)
         op = [self.dr.find_element("opportunities", id)
-              for id in ["link::dafc739e-8c95-11ef-944e-41a8eb05f654", "link::dafc739f-8c95-11ef-944e-41a8eb05f654",
-                         "link::dafc73a5-8c95-11ef-944e-41a8eb05f654", ]]
+              for id in ["link::49", "link::68", "link::69", ]]
         self.assertListEqual(self.dr.find_opportunities_per_variable(var_id), op)
         self.assertListEqual(self.dr.find_opportunities_per_variable(var_name), op)
         self.assertListEqual(self.dr.find_opportunities_per_variable(var_target), op)
 
     def test_themes_per_variable(self):
-        var_id = "link::83bbfb69-7f07-11ef-9308-b1dd71e64bec"
-        var_name = "ocean.zos.tavg-u-hxy-sea.day.GLB"
+        var_id = "link::ocean.zos.tavg-u-hxy-sea.day.glb"
+        var_name = "ocean.zos.tavg-u-hxy-sea.day.glb"
         var_target = self.dr.find_element("variables", var_id)
         themes = [self.dr.find_element("data_request_themes", id)
-                  for id in ["link::527f5c8f-8c97-11ef-944e-41a8eb05f654", "link::527f5c90-8c97-11ef-944e-41a8eb05f654",
-                             "link::527f5c91-8c97-11ef-944e-41a8eb05f654", "link::527f5c92-8c97-11ef-944e-41a8eb05f654",
-                             "link::527f5c93-8c97-11ef-944e-41a8eb05f654"]
+                  for id in ["link::atmosphere", "link::earth_system", "link::impacts", "link::land_landice",
+                             "link::ocean_seaice"]
                   ]
         self.assertListEqual(self.dr.find_themes_per_variable(var_id), themes)
         self.assertListEqual(self.dr.find_themes_per_variable(var_name), themes)
         self.assertListEqual(self.dr.find_themes_per_variable(var_target), themes)
 
     def test_mips_per_variable(self):
-        var_id = "link::83bbfb69-7f07-11ef-9308-b1dd71e64bec"
-        var_name = "ocean.zos.tavg-u-hxy-sea.day.GLB"
+        var_id = "link::ocean.zos.tavg-u-hxy-sea.day.glb"
+        var_name = "ocean.zos.tavg-u-hxy-sea.day.glb"
         var_target = self.dr.find_element("variables", var_id)
         mips = [self.dr.find_element("mips", id)
-                for id in ["link::527f5c64-8c97-11ef-944e-41a8eb05f654", "link::527f5c65-8c97-11ef-944e-41a8eb05f654",
-                           "link::527f5c66-8c97-11ef-944e-41a8eb05f654", "link::527f5c6b-8c97-11ef-944e-41a8eb05f654",
-                           "link::527f5c6c-8c97-11ef-944e-41a8eb05f654", "link::527f5c6d-8c97-11ef-944e-41a8eb05f654",
-                           "link::527f5c6e-8c97-11ef-944e-41a8eb05f654", "link::527f5c6f-8c97-11ef-944e-41a8eb05f654",
-                           "link::527f5c70-8c97-11ef-944e-41a8eb05f654", "link::527f5c73-8c97-11ef-944e-41a8eb05f654",
-                           "link::527f5c74-8c97-11ef-944e-41a8eb05f654", "link::527f5c75-8c97-11ef-944e-41a8eb05f654",
-                           "link::527f5c76-8c97-11ef-944e-41a8eb05f654", "link::527f5c83-8c97-11ef-944e-41a8eb05f654"]]
+                for id in ["link::AerChemMIP2", "link::CMIP", "link::DAMIP", "link::DCPP", "link::FAFMIP", "link::FireMIP", "link::GeoMIP",
+                           "link::HighResMIP", "link::ISMIP7", "link::OMIP", "link::PMIP", "link::SIMIP",
+                           "link::SOFIAMIP", "link::ScenarioMIP", "link::TIPMIP"]]
         self.assertListEqual(self.dr.find_mips_per_variable(var_id), mips)
         self.assertListEqual(self.dr.find_mips_per_variable(var_name), mips)
         self.assertListEqual(self.dr.find_mips_per_variable(var_target), mips)
 
     def test_opportunities_per_experiment(self):
-        exp_id = "link::527f5c46-8c97-11ef-944e-41a8eb05f654"
-        exp_name = "hist-piAQ"
+        exp_id = "link::scen7-hl-ext"
+        exp_name = "scen7-hl-ext"
         exp_target = self.dr.find_element("experiments", exp_id)
         op = [self.dr.find_element("opportunities", id)
-              for id in ["link::dafc739e-8c95-11ef-944e-41a8eb05f654", "link::dafc739f-8c95-11ef-944e-41a8eb05f654",
-                         "link::dafc73a5-8c95-11ef-944e-41a8eb05f654"]]
+              for id in ["link::49", "link::68"]]
         self.assertListEqual(self.dr.find_opportunities_per_experiment(exp_id), op)
         self.assertListEqual(self.dr.find_opportunities_per_experiment(exp_name), op)
         self.assertListEqual(self.dr.find_opportunities_per_experiment(exp_target), op)
 
     def test_themes_per_experiment(self):
-        exp_id = "link::527f5c46-8c97-11ef-944e-41a8eb05f654"
-        exp_name = "hist-piAQ"
+        exp_id = "link::scen7-hl-ext"
+        exp_name = "scen7-hl-ext"
         exp_target = self.dr.find_element("experiments", exp_id)
         themes = [self.dr.find_element("data_request_themes", id)
-                  for id in ["link::527f5c8f-8c97-11ef-944e-41a8eb05f654", "link::527f5c90-8c97-11ef-944e-41a8eb05f654",
-                             "link::527f5c91-8c97-11ef-944e-41a8eb05f654", "link::527f5c92-8c97-11ef-944e-41a8eb05f654",
-                             "link::527f5c93-8c97-11ef-944e-41a8eb05f654"]]
+                  for id in ["link::atmosphere", "link::earth_system", "link::impacts", "link::ocean_seaice"]]
         self.assertListEqual(self.dr.find_themes_per_experiment(exp_id), themes)
         self.assertListEqual(self.dr.find_themes_per_experiment(exp_name), themes)
         self.assertListEqual(self.dr.find_themes_per_experiment(exp_target), themes)
 
     def test_find_opportunities(self):
-        vargrp_id = "link::80ab723b-a698-11ef-914a-613c0433d878"
-        exp_id = "link::527f5c46-8c97-11ef-944e-41a8eb05f654"
+        vargrp_id = "link::landatm_coupling_3hr_medium"
+        exp_id = "link::dcppB-forecast-cmip6"
         list_all = list()
         list_any = [self.dr.find_element("opportunities", id)
-                    for id in ["dafc739e-8c95-11ef-944e-41a8eb05f654", "dafc739f-8c95-11ef-944e-41a8eb05f654",
-                               "dafc73a5-8c95-11ef-944e-41a8eb05f654", "dafc73bd-8c95-11ef-944e-41a8eb05f654"]
+                    for id in ["1", "49", "68", "69"]
                     ]
         self.assertListEqual(self.dr.find_opportunities(operation="all", variable_group=vargrp_id,
                                                         experiments=[exp_id, ]), list_all)
@@ -1365,18 +1236,13 @@ class TestDataRequestFilter(unittest.TestCase):
                                                         experiments=[exp_id, ]), list_any)
 
     def test_find_experiments(self):
-        op_id = "link::dafc73bd-8c95-11ef-944e-41a8eb05f654"
-        expgrp_id = ["link::80ab723e-a698-11ef-914a-613c0433d878", "link::dafc7490-8c95-11ef-944e-41a8eb05f654"]
+        op_id = "link::Accurate assessment of land-atmosphere coupling"
+        expgrp_id = ["link::dcpp", "link::historical"]
         list_all = list()
         list_any = [self.dr.find_element("experiments", id)
-                    for id in ["link::527f5c3d-8c97-11ef-944e-41a8eb05f654", "link::527f5c3f-8c97-11ef-944e-41a8eb05f654",
-                               "link::527f5c53-8c97-11ef-944e-41a8eb05f654", "link::527f5c5a-8c97-11ef-944e-41a8eb05f654",
-                               "link::527f5c5b-8c97-11ef-944e-41a8eb05f654", "link::527f5c5c-8c97-11ef-944e-41a8eb05f654",
-                               "link::527f5c5d-8c97-11ef-944e-41a8eb05f654", "link::527f5c5e-8c97-11ef-944e-41a8eb05f654",
-                               "link::527f5c5f-8c97-11ef-944e-41a8eb05f654", "link::80ab72ae-a698-11ef-914a-613c0433d878",
-                               "link::80ab72af-a698-11ef-914a-613c0433d878", "link::80ab72b0-a698-11ef-914a-613c0433d878",
-                               "link::80ab72b1-a698-11ef-914a-613c0433d878", "link::80ab72b2-a698-11ef-914a-613c0433d878",
-                               "link::80ab72b3-a698-11ef-914a-613c0433d878"]]
+                    for id in ["link::dcppB-forecast-cmip6", "link::esm-hist", "link::esm-scen7-hl",
+                               "link::esm-scen7-m", "link::esm-scen7-vl", "link::historical", "link::scen7-hl",
+                               "link::scen7-m", "link::scen7-vl"]]
         self.assertListEqual(self.dr.find_experiments(operation="all", opportunities=op_id,
                                                       experiment_groups=expgrp_id), list_all)
         self.assertListEqual(self.dr.find_experiments(operation="any", opportunities=op_id,
@@ -1384,58 +1250,59 @@ class TestDataRequestFilter(unittest.TestCase):
 
     def test_find_variables(self):
         table_id = "527f5ced-8c97-11ef-944e-41a8eb05f654"
-        vars_id = ["83bbfbbc-7f07-11ef-9308-b1dd71e64bec", "83bbfbbd-7f07-11ef-9308-b1dd71e64bec",
-                   "8baebea6-4a5b-11e6-9cd2-ac72891c3257", "8bb11ef8-4a5b-11e6-9cd2-ac72891c3257"]
+        vars_id = ["atmos.pr.tavg-u-hxy-u.1hr.glb", "atmos.psl.tpt-u-hxy-u.1hr.glb",
+                   "atmos.uas.tpt-h10m-hxy-u.1hr.glb", "atmos.vas.tpt-h10m-hxy-u.1hr.glb"]
         self.assertListEqual(self.dr.find_variables(operation="all", table_identifier=table_id),
                              [self.dr.find_element("variables", var_id) for var_id in vars_id])
 
         tshp_id = "a06034e5-bbca-11ef-9840-9de7167a7ecb"
-        vars_id = ["bab942a8-e5dd-11e5-8482-ac72891c3257", "bab955ea-e5dd-11e5-8482-ac72891c3257"]
+        vars_id = ["atmos.tas.tmaxavg-h2m-hxy-u.mon.glb", "atmos.tas.tminavg-h2m-hxy-u.mon.glb"]
         self.assertListEqual(self.dr.find_variables(operation="all", temporal_shape=tshp_id),
                              [self.dr.find_element("variables", var_id) for var_id in vars_id])
 
         sshp_id = "a6563bca-8883-11e5-b571-ac72891c3257"
-        vars_id = ["f2fad86e-c38d-11e6-abc1-1b922e5e1118", ]
+        vars_id = ["land.slthick.ti-sl-hxy-lnd.fx.glb", ]
         self.assertListEqual(self.dr.find_variables(operation="all", spatial_shape=sshp_id),
                              [self.dr.find_element("variables", var_id) for var_id in vars_id])
 
         param_id = "00e77372e8b909d9a827a0790e991fd9"
-        vars_id = ["bab2f9d4-e5dd-11e5-8482-ac72891c3257", ]
+        vars_id = ["land.orog.ti-u-hxy-u.fx.glb", ]
         self.assertListEqual(self.dr.find_variables(operation="all", physical_parameter=param_id),
                              [self.dr.find_element("variables", var_id) for var_id in vars_id])
 
         realm_id = "ocnBgchem"
-        vars_id = ["83bbfb7c-7f07-11ef-9308-b1dd71e64bec", "83bbfb7f-7f07-11ef-9308-b1dd71e64bec",
-                   "83bbfb94-7f07-11ef-9308-b1dd71e64bec", "ba9f3ac0-e5dd-11e5-8482-ac72891c3257",
-                   "ba9f643c-e5dd-11e5-8482-ac72891c3257", "ba9f686a-e5dd-11e5-8482-ac72891c3257",
-                   "ba9f91f0-e5dd-11e5-8482-ac72891c3257", "c9180bae-c5e8-11e6-84e6-5404a60d96b5",
-                   "c9181982-c5e8-11e6-84e6-5404a60d96b5"]
+        vars_id = ["ocnBgchem.arag.tavg-ol-hxy-sea.mon.glb", "ocnBgchem.arag.tavg-ols-hxy-sea.mon.glb",
+                   "ocnBgchem.calc.tavg-ol-hxy-sea.mon.glb", "ocnBgchem.calc.tavg-ols-hxy-sea.mon.glb",
+                   "ocnBgchem.chl.tavg-op20bar-hxy-sea.day.glb", "ocnBgchem.dissic.tavg-ol-hxy-sea.mon.glb",
+                   "ocnBgchem.o2.tavg-op20bar-hxy-sea.day.glb", "ocnBgchem.ph.tavg-op20bar-hxy-sea.day.glb",
+                   "ocnBgchem.talk.tavg-ol-hxy-sea.mon.glb"]
         self.assertListEqual(self.dr.find_variables(operation="all", modelling_realm=realm_id),
                              [self.dr.find_element("variables", var_id) for var_id in vars_id])
 
         bcv_id = "80ab7325-a698-11ef-914a-613c0433d878"
-        vars_id = ["bab3c904-e5dd-11e5-8482-ac72891c3257", ]
+        vars_id = ["atmos.pr.tavg-u-hxy-u.3hr.glb", ]
         self.assertListEqual(self.dr.find_variables(operation="all", **{"esm-bcv": bcv_id}),
                              [self.dr.find_element("variables", var_id) for var_id in vars_id])
 
-        cf_std_id = "3ba74d83-8ca2-11ef-944e-41a8eb05f654"
-        vars_id = ["baab0382-e5dd-11e5-8482-ac72891c3257", ]
+        cf_std_id = "3ba6666e-8ca2-11ef-944e-41a8eb05f654"
+        vars_id = ["atmos.prc.tavg-u-hxy-u.mon.glb", ]
         self.assertListEqual(self.dr.find_variables(operation="all", cf_standard_name=cf_std_id),
                              [self.dr.find_element("variables", var_id) for var_id in vars_id])
 
         cell_methods_id = "a269a4c3-8c9b-11ef-944e-41a8eb05f654"
-        vars_id = ["bab1c08c-e5dd-11e5-8482-ac72891c3257", "bab5c7fe-e5dd-11e5-8482-ac72891c3257",
-                   "f2fad86e-c38d-11e6-abc1-1b922e5e1118"]
+        vars_id = ["land.mrsofc.ti-u-hxy-lnd.fx.glb", "land.rootd.ti-u-hxy-lnd.fx.glb",
+                   "land.slthick.ti-sl-hxy-lnd.fx.glb"]
         self.assertListEqual(self.dr.find_variables(operation="all", cell_methods=cell_methods_id),
                              [self.dr.find_element("variables", var_id) for var_id in vars_id])
 
-        cell_measure_id = "a269a4f8-8c9b-11ef-944e-41a8eb05f654"
-        vars_id = ["baa6cf38-e5dd-11e5-8482-ac72891c3257", "baa6d366-e5dd-11e5-8482-ac72891c3257"]
+        cell_measure_id = "a269a4fb-8c9b-11ef-944e-41a8eb05f654"
+        vars_id = ["seaIce.siu.tavg-u-hxy-si.day.glb", "seaIce.siu.tavg-u-hxy-si.mon.glb",
+                   "seaIce.siv.tavg-u-hxy-si.day.glb", "seaIce.siv.tavg-u-hxy-si.mon.glb"]
         self.assertListEqual(self.dr.find_variables(operation="all", cell_measures=cell_measure_id),
                              [self.dr.find_element("variables", var_id) for var_id in vars_id])
 
     def test_find_priority_per_variable(self):
-        var_id = "link::babb20b4-e5dd-11e5-8482-ac72891c3257"
+        var_id = "link::ocean.tos.tpt-u-hxy-sea.3hr.glb"
         var = self.dr.find_element("variable", var_id)
         self.assertEqual(self.dr.find_priority_per_variable(var), 2)
 

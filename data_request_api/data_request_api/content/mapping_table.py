@@ -248,13 +248,19 @@ mapping_table = {
             },
         },
         "internal_filters": {},
-        "drop_keys": ["Modeling Realm (from CMOR Variables)", "Structure Title (from CMOR Variables)", "V1.1"],
+        "drop_keys": [
+            "Modeling Realm (from CMOR Variables)",
+            "Structure Title (from CMOR Variables)",
+            "V1.1",
+        ],
         "internal_consistency": {
             "CF Standard Name (from MIP Variables) 2 (from CMOR Variables)": (
                 "CF Standard Name (from Physical Parameter) (from Variables)"
             ),
             "CMOR Variables": "Variables",
-            "MIP Variables (from CMOR Variables)": ("Physical Parameter (from Variables)"),
+            "MIP Variables (from CMOR Variables)": (
+                "Physical Parameter (from Variables)"
+            ),
             "Title (from CMOR Variables)": "Title (from Variables)",
             "Units": "Units (from Physical Parameter) (from Variables)",
         },
@@ -306,7 +312,9 @@ mapping_table = {
         "internal_filters": {},
         "drop_keys": [],
         "internal_consistency": {
-            "Unique list of variables attached to Opportunity (linked) (from Opportunity)": ("Variables")
+            "Unique list of variables attached to Opportunity (linked) (from Opportunity)": (
+                "Variables"
+            )
         },
         "field_dtypes": {},
     },
@@ -342,7 +350,16 @@ mapping_table = {
     "Opportunity": {
         "source_base": "Data Request Opportunities (Public)",
         "source_table": ["Opportunity"],
-        "internal_mapping": {},
+        "internal_mapping": {
+            "Unique list of variables attached to Opportunity (linked)": {
+                "base_copy_of_table": "Variables",
+                "base": "Data Request Variables (Public)",
+                "table": "Variables",
+                "operation": "",
+                "map_by_key": ["CMIP6 Compound Name", "Compound Name", "Compound name"],
+                "entry_type": "record_id",
+            },
+        },
         "internal_filters": {
             "Status": {
                 "aliases": [],
@@ -367,7 +384,7 @@ mapping_table = {
             "Ocean & sea-ice review comments",
             "Originally Requested Variable Groups",
             "Status",
-            "Unique list of variables attached to Opportunity (linked)",
+            # "Unique list of variables attached to Opportunity (linked)",
         ],
         "internal_consistency": {
             "Ensemble Size": "Minimum ensemble Size",
@@ -378,6 +395,7 @@ mapping_table = {
             "Unique list of experiments (for volume calculation)": (
                 "Unique list of experiments (from Experiment Groups)"
             ),
+            "Unique list of variables attached to Opportunity (linked)": "Unique list of variables attached to Opportunity",
             "Working/Updated Variable Groups": "Variable Groups",
         },
         "field_dtypes": {},
@@ -594,7 +612,6 @@ mapping_table = {
             "Cross-thematic group review comment",
             "Cross-thematic team review",
             "Earth system author team review",
-            "Extra Dimensions",
             "Impacts & adaptation author team review",
             "Land & land-ice author team review",
             "Ocean & sea-ice author team review",
@@ -608,12 +625,14 @@ mapping_table = {
             "Structure Title",
             "Theme",
             "Variable is included in ESM-BCV v1.3",
+            "variableRootDD (from Physical Parameter)",
         ],
         "internal_consistency": {
             "CF Standard Name (from MIP Variables)": "CF Standard Name (from Physical Parameter)",
             "Compound name": "CMIP6 Compound Name",
             "Compound Name": "CMIP6 Compound Name",
             "ESM-BCV 1.3": "ESM-BCV 1.4",
+            "Extra Dimensions": "Extra dimensions",
             "Min Rank": "Min Rank in CMIP6 download statistics",
             "Modeling Realm": "Modelling Realm - Primary",
             "Modeling Realm - Primary": "Modelling Realm - Primary",
@@ -687,7 +706,7 @@ version_consistency_fields = {
         "MIPs": "Of interest to MIPs",
     },
     "Variables": {
-        "Contitional": "Conditional",
+        "Contitional": "Conditional",  # noqa
         "Compound name": "CMIP6 Compound Name",
         "Compound Name": "CMIP6 Compound Name",
         "ESM-BCV 1.3": "ESM-BCV 1.4",
@@ -710,7 +729,7 @@ version_consistency_drop_fields = {
         "Structure Title (from Variables)",
         "V1.1",
     ],
-    "Glossary": ["Opportunity"],
+    "Glossary": ["Opportunity", "Reference"],
     "MIPs": ["MIP feedback"],
     "Modelling Realm": ["UID 2"],
     "Opportunity": ["Keyword"],
@@ -722,7 +741,16 @@ version_consistency_drop_fields = {
         "Proposed CF Standard Name",
     ],
     "Priority Level": ["Last Modified By"],
-    "Spatial Shape": ["Hor Label DD", "Structure", "Vertical Label DD", "Vertical Label MM"],
+    "Spatial Shape": [
+        "Hor Label DD",
+        "Structure",
+        "Vertical Label DD",
+        "Vertical Label MM",
+    ],
     "Temporal Shape": ["Brand", "Structure"],
-    "Variables": ["Proposed CF Standard Name (for new Physical Parameters)", "Structure Label", "Structure Title"],
+    "Variables": [
+        "Proposed CF Standard Name (for new Physical Parameters)",
+        "Structure Label",
+        "Structure Title",
+    ],
 }

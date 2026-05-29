@@ -115,7 +115,6 @@
           "comments": "opportunity/variable_group_comments"
         },
         "variables": {
-          "compound_name": "name",
           "cmip6_frequency.+": "cmip6_frequency",
           "^frequency": "cmip7_frequency",
           "esm-bcv.*": "esm-bcv",
@@ -132,9 +131,9 @@
         }
       },
       "keys_to_sort": {
-        "opportunities": ["variable_groups", "data_request_themes", "experiment_groups", "time_.*"],
+        "opportunities": ["variable_groups", "data_request_themes", "experiment_groups", "time_.*", "mips"],
         "experiment_groups": ["experiments"],
-        "variable_groups": ["variables", "mips"],
+        "variable_groups": ["variables", "mips", "time_.*"],
         "cmip7_frequency": ["cmip6_frequency"]
       },
       "keys_to_format": {
@@ -142,46 +141,89 @@
           "opportunities": ["lead_theme"],
           "physical_parameters": ["cf_standard_name"],
           "cmip6_tables_identifiers": ["cmip7_frequency"],
-          "variables": ["cell_methods", ".*frequency", "esm-bcv", "physical_parameter",
+          "variables": ["cell_methods", ".*frequency", "physical_parameter",
             "spatial_shape", ".*table.*", "temporal_shape"]
         },
         "string_to_list": {
           "opportunities": ["keyword"]
         }
       },
-      "keys_to_copy": {
+      "keys_to_initialize": {
         "default": {
           "linked_id": "uid"
+
+        },
+        "variables": {
+          "linked_id": "cmip7_compound_name"
+        },
+        "experiments": {
+          "linked_id": "name"
+        },
+        "experiment_groups": {
+          "linked_id": "name"
+        },
+        "opportunities": {
+          "linked_id": "opportunity_id"
+        },
+        "data_request_themes": {
+          "linked_id": "short_name"
+        },
+        "mips": {
+          "linked_id": "name"
+        },
+        "time_subsets": {
+          "linked_id": "name"
+        },
+        "variable_groups": {
+          "linked_id": "name"
+        },
+        "priority_level": {
+          "linked_id": "name"
         }
-      }
+      },
+      "keys_to_copy": {}
     },
     "test": {
-      "keys_to_rename": {
+      "keys_to_copy": {
         "variables": {
-          "cmip7_compound_name": "name"
+          "cmip7_compound_name": "name",
+          "modelling_realm_-_primary": "primary_modelling_realm",
+          "modeling_realm_-_primary": "primary_modelling_realm"
         }
       }
     },
     "v1.0": {},
     "v1.1": {},
     "v1.2.0": {
-      "keys_to_rename": {
+
+      "keys_to_copy": {
+
         "variables": {
           "cmip6_compound_name": "name"
         }
       }
     },
     "v1.2.1": {
-      "keys_to_rename": {
+
+      "keys_to_copy": {
         "variables": {
           "cmip6_compound_name": "name"
+        }
+      },CMIP-Data-Request/CMIP7_DReq_Software:
+      "keys_to_initialize": {
+        "variables": {
+          "linked_id": "uid"
         }
       }
     },
     "v1.2": {
-      "keys_to_rename": {
+
+      "keys_to_copy": {
+
         "variables": {
-          "cmip7_compound_name": "name"
+          "cmip7_compound_name": "name",
+          "modelling_realm_-_primary": "primary_modelling_realm",
+          "modeling_realm_-_primary": "primary_modelling_realm"
         }
       }
     }

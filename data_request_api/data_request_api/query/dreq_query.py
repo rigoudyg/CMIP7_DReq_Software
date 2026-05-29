@@ -21,6 +21,7 @@ from data_request_api.query.dreq_classes import (
     DreqTable, ExptRequest, PRIORITY_LEVELS, format_attribute_name)
 from data_request_api.utilities.decorators import append_kwargs_from_config
 from data_request_api.utilities.tools import write_csv_output_file_content
+from data_request_api.content.utils import _parse_version
 
 # Version of software (python API):
 from data_request_api import version as api_version
@@ -28,25 +29,6 @@ from data_request_api import version as api_version
 ###############################################################################
 # Functions to manage data request content input and use it to create python
 # objects representing the tables.
-
-
-def get_dreq_version_tuple(version: str):
-    '''
-    Parse version string to return tuple giving version major, minor (etc) numbers.
-    Examples:
-        get_dreq_version_tuple('v1.2') --> (1,2)
-        get_dreq_version_tuple('v1.0beta') --> (1,0)
-    '''
-    if version == 'dev':
-        # Is a tuple needed/useful for 'dev' versions? Set one just in case.
-        return (0,)
-    else:
-        patt = '[0-9.]*[0-9]'
-        ver_num = re.findall(patt, version)
-        if len(ver_num) != 1:
-            raise ValueError('Ambiguous version string: ' + version)
-        ver_num_str = ver_num[0]
-        return tuple(map(int, ver_num_str.split('.')))
 
 
 def get_priority_levels():
@@ -492,6 +474,47 @@ def get_opp_vars(opp, priority_levels, var_groups, dreq_vars, dreq_priorities=No
     return opp_vars
 
 
+def get_opp_time_subsets(opp, ts, verbose=False):
+    """
+    For one opportunity, get its requested time subsets.
+
+    Parameters
+    ----------
+    opp : DreqRecord
+        One record from the Opportunity table
+    ts : DreqTable
+        Time Subsets table
+
+    Returns
+    -------
+    List
+        List of time subsets requested by the given opportunity
+    """
+    subsets = dict()
+    ts_ids = list()
+
+    if hasattr(opp, "time_subsets"):
+        ts_ids = opp.time_subsets
+    elif hasattr(opp, "time_subset"):
+        ts_ids = opp.time_subset
+
+    for ts_id in ts_ids:
+        subsets[ts.get_record(ts_id).label] = ts.get_record(ts_id)
+
+    if not subsets or "all" in subsets:
+        subsets = {"all": "Whole time series"}
+
+    if verbose:
+        print(f'  Time Subsets ({len(subsets)}):')
+        for subset, record in subsets.items():
+            if subset == "all":
+                print(f'    {subset} ({record})')
+            else:
+                print(f'    {subset} ({record.title}, {record.nyears} simulation years)')
+
+    return subsets
+
+
 def _get_base_dreq_tables(content, dreq_version, purpose='request'):
     if isinstance(content, dict):
         if all([isinstance(table, DreqTable) for table in content.values()]):
@@ -512,6 +535,7 @@ def _get_base_dreq_tables(content, dreq_version, purpose='request'):
 
 def get_requested_variables(content, dreq_version,
                             use_opps='all', priority_cutoff='Low',
+                            combined_request=False, time_subsets=False,
                             verbose=True, check_core_variables=True):
     '''
     Return variables requested for each experiment, as a function of opportunities supported and priority level of variables.
@@ -536,16 +560,33 @@ def get_requested_variables(content, dreq_version,
     check_core_variables : bool
         True ==> check that all experiments contain a non-empty list of Core variables,
         and that it's the same list for all experiments.
+    combined_request : bool
+        True ==> combine requests from all experiments into a single request,
+        and add it as experiment 'all_experiments'
+    time_subsets : bool
+        True ==> attach requested time subsets to each requested variable
 
     Returns
     -------
     Dict keyed by experiment name, giving prioritized variables for each experiment.
+    If time_subsets is True, then also returns the time subsets for each experiment attached to each variable.
     Example:
     {   'Header' : ... (Header contains info about where this request comes from)
         'experiment' : {
             'historical' :
                 'High' : ['Amon.tas', 'day.tas', ...],
                 'Medium' : ...
+            }
+            ...
+        }
+    }
+    Example if time_subsets is True:
+    {   'Header' : ... (Header contains info about where this request comes from)
+        'experiment' : {
+            'historical' :
+                'High' : {'Amon.tas': ['hist72'], 'day.tas': ['hist72', 'histext'], ...},
+                'Medium' : {'Amon.tas': ['all'], ...},
+                'Low' : ...
             }
             ...
         }
@@ -558,7 +599,8 @@ def get_requested_variables(content, dreq_version,
         'expt groups': base['Experiment Group'],
         'expts': base['Experiments'],
         'var groups': base['Variable Group'],
-        'vars': base['Variables']
+        'vars': base['Variables'],
+        'ts': base['Time Subset'],
     }
     opp_ids = get_opp_ids(use_opps, dreq_tables['opps'], verbose=verbose)
 
@@ -582,6 +624,10 @@ def get_requested_variables(content, dreq_version,
 
     # Loop over Opportunities to get prioritized lists of variables
     request = {}  # dict to hold aggregated request
+    if combined_request:  # Optionally add combined request entries
+        request['all_experiments'] = ExptRequest('all_experiments')
+        request['historical_experiments'] = ExptRequest('historical_experiments')
+        request['scenario_experiments'] = ExptRequest('scenario_experiments')
     for opp_id in opp_ids:
         opp = dreq_tables['opps'].records[opp_id]  # one record from the Opportunity table
 
@@ -600,6 +646,10 @@ def get_requested_variables(content, dreq_version,
                                 dreq_tables['priority level'],
                                 verbose=verbose)
 
+        opp_time_subsets = get_opp_time_subsets(opp,
+                                                dreq_tables['ts'],
+                                                verbose=verbose)
+
         # Aggregate this Opportunity's request into the master list of requests
         for expt_name in opp_expts:
             if expt_name not in request:
@@ -608,7 +658,22 @@ def get_requested_variables(content, dreq_version,
 
             # Add this Opportunity's variables request to the ExptRequest object
             for priority_level, var_names in opp_vars.items():
-                request[expt_name].add_vars(var_names, priority_level)
+                if time_subsets:
+                    request[expt_name].add_vars(var_names, priority_level, time_subsets=opp_time_subsets)
+                    if combined_request:
+                        request['all_experiments'].add_vars(var_names, priority_level, time_subsets=opp_time_subsets)
+                        if 'hist' in expt_name.lower():
+                            request['historical_experiments'].add_vars(var_names, priority_level, time_subsets=opp_time_subsets)
+                        elif any(scen_part in expt_name.lower() for scen_part in ['ssp', 'scen']):
+                            request['scenario_experiments'].add_vars(var_names, priority_level, time_subsets=opp_time_subsets)
+                else:
+                    request[expt_name].add_vars(var_names, priority_level)
+                    if combined_request:
+                        request['all_experiments'].add_vars(var_names, priority_level)
+                        if 'hist' in expt_name.lower():
+                            request['historical_experiments'].add_vars(var_names, priority_level)
+                        elif any(scen_part in expt_name.lower() for scen_part in ['ssp', 'scen']):
+                            request['scenario_experiments'].add_vars(var_names, priority_level)
 
     opp_titles = sorted([dreq_tables['opps'].get_record(opp_id).title for opp_id in opp_ids])
     requested_vars = {
@@ -722,16 +787,19 @@ def get_variables_metadata(content, dreq_version,
     if 'Structure' in base:
         dreq_tables['structure'] = base['Structure']
 
-    if 'Table Identifiers' in base:
-        dreq_tables['CMOR tables'] = base['Table Identifiers']
-        attr_table = 'table'
-        attr_realm = 'modelling_realm'
-    elif 'CMIP6 Table Identifiers (legacy)' in base:
+    # Specify names of some DR variable attributes depending the DR version
+    # TO DO: is this logic still needed? If so, make it explicitly depend on DR Content version?
+    if 'CMIP6 Table Identifiers (legacy)' in base:
         dreq_tables['CMOR tables'] = base['CMIP6 Table Identifiers (legacy)']
         attr_table = 'cmip6_table_legacy'
         attr_realm = 'modelling_realm___primary'
+    elif 'Table Identifiers' in base:
+        dreq_tables['CMOR tables'] = base['Table Identifiers']
+        attr_table = 'table'
+        attr_realm = 'modelling_realm'
     else:
         raise ValueError('Which table contains CMOR table identifiers?')
+    attr_realm_additional = 'modelling_realm___secondary'
 
     if dreq_version in dreq_versions_substitute_cmip6_freq:
         # needed for corrections below
@@ -868,12 +936,16 @@ def get_variables_metadata(content, dreq_version,
         else:
             dimensions = dimensions_linked
 
-        # Get physical parameter record and use its name as out_name.
-        # (Comparison with CMIP6 CMOR tables shows that out_name is the same as physical parameter name
-        # for almost all variables in dreq v1.2.1.)
+        # Get physical parameter record and use its name as out_name
         link = var.physical_parameter[0]
         phys_param = dreq_tables['physical parameters'].get_record(link)
-        out_name = phys_param.name
+        if hasattr(phys_param, 'variablerootdd'):
+            # variableRootDD (aka "root name") is available in DR v1.2.2 onward
+            out_name = phys_param.variablerootdd
+        else:
+            # Comparison with CMIP6 CMOR tables shows that out_name is the same as physical parameter name
+            # for almost all variables in dreq v1.2.1
+            out_name = phys_param.name
 
         if cmor_variables:
             # Filter by CMOR variable name
@@ -894,8 +966,16 @@ def get_variables_metadata(content, dreq_version,
         else:
             standard_name_proposed = phys_param.proposed_cf_standard_name
 
+        # Get realm(s)
         link_realm = getattr(var, attr_realm)
         modeling_realm = [dreq_tables['realm'].get_record(link).id for link in link_realm]
+        if hasattr(var, attr_realm_additional):
+            # Add secondary realm(s), if any, to the list
+            link_realm_additional = getattr(var, attr_realm_additional)
+            modeling_realm += [dreq_tables['realm'].get_record(link).id for link in link_realm_additional]
+        # Raise error if any realm is duplicated in the list
+        if len(modeling_realm) != len(set(modeling_realm)):
+            raise ValueError(f'Redundant realm(s) found for DR variable {var_name}: {modeling_realm}')
 
         cell_measures = ''
         if hasattr(var, 'cell_measures'):
@@ -908,6 +988,10 @@ def get_variables_metadata(content, dreq_version,
         comment = ''
         if hasattr(var, 'description'):
             comment = var.description
+
+        processing_note = ''
+        if hasattr(var, 'processing_note'):
+            processing_note = var.processing_note
 
         var_info = OrderedDict()
         # Insert fields in order given by CMIP6 cmor tables (https://github.com/PCMDI/cmip6-cmor-tables)
@@ -926,6 +1010,7 @@ def get_variables_metadata(content, dreq_version,
 
             'long_name': var.title,
             'comment': comment,
+            'processing_note': processing_note,
 
             'dimensions': dimensions,
 
@@ -944,6 +1029,10 @@ def get_variables_metadata(content, dreq_version,
             'cmip6_table': table_id,
             'physical_parameter_name': phys_param.name,
         })
+
+        for attr in ['flag_values', 'flag_meanings']:
+            if hasattr(var, attr):
+                var_info[attr] = getattr(var, attr)
 
         # Get info on branded variable name, if available
         if hasattr(var, 'branded_variable_name'):
@@ -1002,7 +1091,7 @@ def get_variables_metadata(content, dreq_version,
         if check_c7_name:
             # Consistency check on definition of CMIP7 compound name.
             # For development, not intended as a user option.
-            if get_dreq_version_tuple(dreq_version) >= (1, 2, 2):
+            if _parse_version(dreq_version) >= (1, 2, 2, 0, "", 0):
                 cn = []
                 cn.append(modeling_realm[0])
                 cn.append(variableRootDD)
@@ -1175,6 +1264,9 @@ def write_requested_vars_json(outfile, expt_vars, dreq_version, priority_cutoff,
         'Description': 'This file gives the names of output variables that are requested from CMIP experiments by the supported Opportunities. The variables requested from each experiment are listed under each experiment name, grouped according to the priority level at which they are requested. For each experiment, the prioritized list of variables was determined by compiling together all requests made by the supported Opportunities for output from that experiment.',
         'Opportunities supported': sorted(expt_vars['Header']['Opportunities'], key=str.lower)
     })
+    # Add Note about combined request, if included
+    if "all_experiments" in expt_vars["experiment"]:
+        header["Note"] = "Added combined request for all experiments as entry 'all_experiments'. Added combined request for all historical and scenario experiments as entries 'historical_experiments' and 'scenario_experiments', respectively."
 
     # List supported priority levels
     priority_levels = get_priority_levels()
@@ -1185,7 +1277,7 @@ def write_requested_vars_json(outfile, expt_vars, dreq_version, priority_cutoff,
     })
     for req in expt_vars['experiment'].values():
         for p in priority_levels[m:]:
-            assert req[p] == []
+            assert req[p] == [] or req[p] == {}
             req.pop(p)  # remove empty lists of unsupported priorities from the output
 
     # List included experiments

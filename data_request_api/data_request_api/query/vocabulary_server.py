@@ -93,6 +93,7 @@ class VocabularyServer(object):
             extra_dimension="coordinates_and_dimensions",
             frequency="cmip7_frequency",
             max_priority_level="priority_level",
+            primary_modelling_realm="modelling_realm",
             structure="structure_title",
             table="cmip6_tables_identifier",
             table_identifier="cmip6_tables_identifier",
@@ -238,6 +239,9 @@ class ConstantValueObj(object):
 
     def __str__(self):
         return str(self.value)
+
+    def __repr__(self):
+        return str(self)
 
     def __hash__(self):
         return hash(self.value)
